@@ -45,7 +45,7 @@ For external developers or alternative workflows:
 
 ---
 
-## 🔄 Recent Updates
+## 🟢 Recent Updates
 
 ### 📐 Dynamic Configuration Architecture
 The script features an interactive routing step inside Option 2 that asks for your project's precise structural footprint before demanding folder paths, allowing the core engine to dynamically re-scale its lane constraints:
@@ -70,7 +70,7 @@ The strict **All-or-Nothing Rule** now maps selectively against your chosen foot
 
 ## 🧑‍💻 Credits & Architecture
 
-* **System Architect & Designer:** Ezeki
+* **System Architect & Designer:** Verkiel-cmd
 * **Engine:** Windows Scripting Architecture (`Robocopy` / `CMD Shell`)
 
 *Feel free to fork this repository, submit issues, or request feature enhancements!*
