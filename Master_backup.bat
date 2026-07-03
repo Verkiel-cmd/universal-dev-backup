@@ -20,12 +20,21 @@ set /p path_choice="Select an option (1 or 2) then press Enter: "
 if "%path_choice%"=="1" (
     :: Your personal default setup
     set "PROJECT_NAME=Student Management System"
+    
+    :: FRONTEND PATHS
     set "PROD_SOURCE=C:\Users\ezeki\Downloads\ezeki_live-code~[student-management-system]\PRODUCTION_student-management-frontend"
     set "PROD_DEST=G:\My Drive\Universal-devs-data\PRODUCTION_student-management-frontend"
     set "LOCAL_SOURCE=C:\Users\ezeki\Downloads\ezeki_local-code~[student-management-system]\LOCALHOST_student-management-frontend"
     set "LOCAL_DEST=G:\My Drive\Universal-devs-data\LOCALHOST_student-management-frontend"
+    
+    :: BACKEND PATHS
+    set "BACKEND_PROD_SOURCE=C:\Users\ezeki\Downloads\ezeki_live-code~[student-management-system]\PRODUCTION_student-management-backend"
+    set "BACKEND_PROD_DEST=G:\My Drive\Universal-devs-data\PRODUCTION_student-management-backend"
+    set "BACKEND_LOCAL_SOURCE=C:\Users\ezeki\Downloads\ezeki_local-code~[student-management-system]\LOCALHOST_student-management-backend"
+    set "BACKEND_LOCAL_DEST=G:\My Drive\Universal-devs-data\LOCALHOST_student-management-backend"
+    
     title %PROJECT_NAME% - Strict Guardrail Backup Utility
-    goto MENU
+    goto VERIFY_PATHS
 )
 if "%path_choice%"=="2" goto CUSTOM_INPUT
 goto SETUP_PATHS
@@ -33,101 +42,81 @@ goto SETUP_PATHS
 :CUSTOM_INPUT
 cls
 echo ============================================================
-echo              ENTER YOUR PROJECT ENVIRONMENT INFO
+echo               CUSTOM PROJECT PATH INPUT
 echo ============================================================
-echo.
-set /p PROJECT_NAME="1. Enter your Project Name (e.g., E-Commerce App): "
-
-:: Update the command prompt window title dynamically
-title %PROJECT_NAME% - Strict Guardrail Backup Utility
-
-echo.
+set /p PROJECT_NAME="Enter Project Name: "
+set /p PROD_SOURCE="Enter FRONTEND PRODUCTION Source Path: "
+set /p PROD_DEST="Enter FRONTEND PRODUCTION Destination Path: "
+set /p LOCAL_SOURCE="Enter FRONTEND LOCALHOST Source Path: "
+set /p LOCAL_DEST="Enter FRONTEND LOCALHOST Destination Path: "
 echo ------------------------------------------------------------
-echo   ENTER YOUR FOLDER PATHS (Right-Click to Paste or Drag Folder)
-echo ------------------------------------------------------------
-set /p PROD_SOURCE="2. Enter Live PRODUCTION Source Path: "
-set /p PROD_DEST="3. Enter PRODUCTION Backup (Cloud/Drive) Path: "
-echo.
-set /p LOCAL_SOURCE="4. Enter Live LOCALHOST Source Path: "
-set /p LOCAL_DEST="5. Enter LOCALHOST Backup (Cloud/Drive) Path: "
+set /p BACKEND_PROD_SOURCE="Enter BACKEND PRODUCTION Source Path: "
+set /p BACKEND_PROD_DEST="Enter BACKEND PRODUCTION Destination Path: "
+set /p BACKEND_LOCAL_SOURCE="Enter BACKEND LOCALHOST Source Path: "
+set /p BACKEND_LOCAL_DEST="Enter BACKEND LOCALHOST Destination Path: "
+goto VERIFY_PATHS
 
-:: PRO-DEV GUARDRAIL: Strip quotes if they dragged/dropped folders with spaces
-set PROD_SOURCE=%PROD_SOURCE:"=%
-set PROD_DEST=%PROD_DEST:"=%
-set LOCAL_SOURCE=%LOCAL_SOURCE:"=%
-set LOCAL_DEST=%LOCAL_DEST:"=%
+:VERIFY_PATHS
+cls
+echo Verification: Checking if paths are valid...
+if not exist "%PROD_SOURCE%" set "FAILED_PATH=FRONTEND PRODUCTION SOURCE" & set "PATH_VAL=%PROD_SOURCE%" & goto PATH_ERROR
+if not exist "%PROD_DEST%" set "FAILED_PATH=FRONTEND PRODUCTION DESTINATION" & set "PATH_VAL=%PROD_DEST%" & goto PATH_ERROR
+if not exist "%LOCAL_SOURCE%" set "FAILED_PATH=FRONTEND LOCALHOST SOURCE" & set "PATH_VAL=%LOCAL_SOURCE%" & goto PATH_ERROR
+if not exist "%LOCAL_DEST%" set "FAILED_PATH=FRONTEND LOCALHOST DESTINATION" & set "PATH_VAL=%LOCAL_DEST%" & goto PATH_ERROR
+
+if not exist "%BACKEND_PROD_SOURCE%" set "FAILED_PATH=BACKEND PRODUCTION SOURCE" & set "PATH_VAL=%BACKEND_PROD_SOURCE%" & goto PATH_ERROR
+if not exist "%BACKEND_PROD_DEST%" set "FAILED_PATH=BACKEND PRODUCTION DESTINATION" & set "PATH_VAL=%BACKEND_PROD_DEST%" & goto PATH_ERROR
+if not exist "%BACKEND_LOCAL_SOURCE%" set "FAILED_PATH=BACKEND LOCALHOST SOURCE" & set "PATH_VAL=%BACKEND_LOCAL_SOURCE%" & goto PATH_ERROR
+if not exist "%BACKEND_LOCAL_DEST%" set "FAILED_PATH=BACKEND LOCALHOST DESTINATION" & set "PATH_VAL=%BACKEND_LOCAL_DEST%" & goto PATH_ERROR
 goto MENU
 
 :MENU
 cls
 color 0F
 echo ============================================================
-echo   PROJECT: %PROJECT_NAME% BACKUP UTILITY
+echo   %PROJECT_NAME% - BACKUP UTILITY (STRICT GUARDRAILS)
 echo ============================================================
-echo   Current Active Target Paths:
-echo   Prod Src:  %PROD_SOURCE%
-echo   Local Src: %LOCAL_SOURCE%
+echo   Current Configured Paths:
+echo   [FE-PROD] %PROD_SOURCE%
+echo   [FE-LOCAL] %LOCAL_SOURCE%
+echo   [BE-PROD] %BACKEND_PROD_SOURCE%
+echo   [BE-LOCAL] %BACKEND_LOCAL_SOURCE%
 echo ============================================================
-echo.
-echo  [1] Run SAFE SIMULATION (Test paths without changing files)
-echo  [2] Run LIVE BACKUP     (Sync everything to Google Drive)
-echo  [3] Reset Paths / Change Project Name
-echo  [4] Exit
-echo.
-echo ============================================================
-echo.
-
-set /p choice="Enter your choice (1-4) then press Enter: "
-
-if "%choice%"=="1" goto INITIALIZE_SIM
-if "%choice%"=="2" goto INITIALIZE_LIVE
-if "%choice%"=="3" goto SETUP_PATHS
-if "%choice%"=="4" goto EXIT
-goto INVALID
-
-:INITIALIZE_SIM
-set MODE=SIMULATION
-goto VERIFY_PATHS
-
-:INITIALIZE_LIVE
-set MODE=LIVE
-goto VERIFY_PATHS
-
-:VERIFY_PATHS
-cls
-echo ============================================================
-echo  GUARDRAIL ACTIVE: Verifying all folder paths match exactly...
+echo   [1] RUN SAFE SIMULATION (Check changes without overwriting)
+echo   [2] RUN LIVE BACKUP     (Mirror actual project directories)
+echo   [3] Exit Utility
 echo ============================================================
 echo.
+set /p action_choice="Select an option (1, 2, or 3) then press Enter: "
 
-:: Strict Folder Verification Checks
-if not exist "%PROD_SOURCE%" set "FAILED_PATH=PRODUCTION SOURCE" & set "PATH_VAL=%PROD_SOURCE%" & goto PATH_ERROR
-if not exist "%PROD_DEST%" set "FAILED_PATH=PRODUCTION DESTINATION" & set "PATH_VAL=%PROD_DEST%" & goto PATH_ERROR
-if not exist "%LOCAL_SOURCE%" set "FAILED_PATH=LOCALHOST SOURCE" & set "PATH_VAL=%LOCAL_SOURCE%" & goto PATH_ERROR
-if not exist "%LOCAL_DEST%" set "FAILED_PATH=LOCALHOST DESTINATION" & set "PATH_VAL=%LOCAL_DEST%" & goto PATH_ERROR
-
-echo [OK] All paths verified and match perfectly! Proceeding...
-timeout /t 2 >nul
-if "%MODE%"=="SIMULATION" goto SIMULATION
-if "%MODE%"=="LIVE" goto LIVE
+if "%action_choice%"=="1" goto SIMULATE
+if "%action_choice%"=="2" goto LIVE
+if "%action_choice%"=="3" goto EXIT
 goto MENU
 
-:SIMULATION
+:SIMULATE
 cls
 echo ============================================================
 echo  RUNNING SIMULATION MODE... (No files will be modified)
 echo ============================================================
 echo.
-echo --- [1/2] Simulating PRODUCTION... ---
-robocopy "%PROD_SOURCE%" "%PROD_DEST%" /MIR /XD node_modules dist .git /R:2 /W:5 /L
+echo --- [1/4] Simulating FRONTEND PRODUCTION... ---
+robocopy "%PROD_SOURCE%" "%PROD_DEST%" /L /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /R:2 /W:5 /XD node_modules dist .git
 echo.
-echo --- [2/2] Simulating LOCALHOST... ---
-robocopy "%LOCAL_SOURCE%" "%LOCAL_DEST%" /MIR /XD node_modules dist .git /R:2 /W:5 /L
+echo --- [2/4] Simulating FRONTEND LOCALHOST... ---
+robocopy "%LOCAL_SOURCE%" "%LOCAL_DEST%" /L /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /R:2 /W:5 /XD node_modules dist .git
+echo.
+echo --- [3/4] Simulating BACKEND PRODUCTION... ---
+robocopy "%BACKEND_PROD_SOURCE%" "%BACKEND_PROD_DEST%" /L /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /R:2 /W:5 /XD node_modules dist .git
+echo.
+echo --- [4/4] Simulating BACKEND LOCALHOST... ---
+robocopy "%BACKEND_LOCAL_SOURCE%" "%BACKEND_LOCAL_DEST%" /L /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /R:2 /W:5 /XD node_modules dist .git
 echo.
 echo ============================================================
 echo  Simulation finished! No changes were made to your cloud.
 echo ============================================================
-goto END
+pause
+goto MENU
 
 :LIVE
 cls
@@ -135,16 +124,23 @@ echo ============================================================
 echo  WARNING: RUNNING LIVE BACKUP MODE...
 echo ============================================================
 echo.
-echo --- [1/2] Syncing PRODUCTION to Backup Destination... ---
+echo --- [1/4] Syncing FRONTEND PRODUCTION to Backup Destination... ---
 robocopy "%PROD_SOURCE%" "%PROD_DEST%" /MIR /XD node_modules dist .git /R:2 /W:5
 echo.
-echo --- [2/2] Syncing LOCALHOST to Backup Destination... ---
+echo --- [2/4] Syncing FRONTEND LOCALHOST to Backup Destination... ---
 robocopy "%LOCAL_SOURCE%" "%LOCAL_DEST%" /MIR /XD node_modules dist .git /R:2 /W:5
+echo.
+echo --- [3/4] Syncing BACKEND PRODUCTION to Backup Destination... ---
+robocopy "%BACKEND_PROD_SOURCE%" "%BACKEND_PROD_DEST%" /MIR /XD node_modules dist .git /R:2 /W:5
+echo.
+echo --- [4/4] Syncing BACKEND LOCALHOST to Backup Destination... ---
+robocopy "%BACKEND_LOCAL_SOURCE%" "%BACKEND_LOCAL_DEST%" /MIR /XD node_modules dist .git /R:2 /W:5
 echo.
 echo ============================================================
 echo  Live backup completed successfully!
 echo ============================================================
-goto END
+pause
+goto MENU
 
 :PATH_ERROR
 color 0C
@@ -163,18 +159,8 @@ pause
 color 0F
 goto SETUP_PATHS
 
-:INVALID
-echo.
-echo [!] Invalid selection. Please try again.
-pause
-goto MENU
-
 :EXIT
-echo.
-echo Exiting utility. Goodbye!
-goto END
-
-:END
-echo.
+cls
+echo Exiting utility. Keep coding safely!
 pause
 exit
