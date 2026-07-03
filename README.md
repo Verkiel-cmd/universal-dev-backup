@@ -49,12 +49,13 @@ For external developers or alternative workflows:
 
 ### 📐 Dynamic Configuration Architecture
 The script features an interactive routing step inside Option 2 that asks for your project's precise structural footprint before demanding folder paths, allowing the core engine to dynamically re-scale its lane constraints:
+* **Single Environment Pipeline:** Allocates and monitors exactly **2 paths** (1 local Source and 1 cloud Destination), making it perfect for rapid single-component sync setups.
 * **Frontend Only Structure:** Dynamically isolates and requests exactly **4 active Frontend paths** (Production and Localhost profiles).
 * **Backend Only Structure:** Dynamically isolates and requests exactly **4 active Backend paths** (Production and Localhost profiles).
 * **Full-Stack Combo Layout:** Unlocks the full automated tracking array for all **8 project paths** simultaneously.
 
 ### 🛡️ Adaptive Gatekeeper Integration
-The strict **All-or-Nothing Rule** now maps selectively against your chosen footprint. If you declare a "Frontend Only" scope, the verification engine bypasses backend checks completely, effectively eliminating false-positive folder errors or input crashes on empty rows while keeping safety locks running at 100% on active channels.
+The strict **All-or-Nothing Rule** now maps selectively against your chosen footprint. If you declare a "Single Environment" or "Frontend Only" scope, the verification engine isolates its focus exclusively to those specific paths. It intentionally bypasses unselected paths, completely eliminating false-positive folder errors or input crashes on empty rows while keeping the core flashing red safety locks running at 100% on active channels.
 
 ---
 
