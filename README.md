@@ -45,6 +45,19 @@ For external developers or alternative workflows:
 
 ---
 
+## 🔄 Recent Updates
+
+### 📐 Dynamic Configuration Architecture
+The script features an interactive routing step inside Option 2 that asks for your project's precise structural footprint before demanding folder paths, allowing the core engine to dynamically re-scale its lane constraints:
+* **Frontend Only Structure:** Dynamically isolates and requests exactly **4 active Frontend paths** (Production and Localhost profiles).
+* **Backend Only Structure:** Dynamically isolates and requests exactly **4 active Backend paths** (Production and Localhost profiles).
+* **Full-Stack Combo Layout:** Unlocks the full automated tracking array for all **8 project paths** simultaneously.
+
+### 🛡️ Adaptive Gatekeeper Integration
+The strict **All-or-Nothing Rule** now maps selectively against your chosen footprint. If you declare a "Frontend Only" scope, the verification engine bypasses backend checks completely, effectively eliminating false-positive folder errors or input crashes on empty rows while keeping safety locks running at 100% on active channels.
+
+---
+
 ## 🛡️ Applied Safety Guardrail Matrix
 
 | Security Check | Trigger Mechanism | Action Taken |
