@@ -102,6 +102,9 @@ if "%SYNC_MODE%"=="SINGLE_ENV" goto VERIFY_SINGLE
 if "%SYNC_MODE%"=="BACKEND_ONLY" goto VERIFY_BACKEND
 
 :VERIFY_FRONTEND
+echo "%PROD_SOURCE%" | findstr /I "G: My-Drive OneDrive Dropbox iCloud CloudSync" >nul && goto SWAP_ERROR
+echo "%LOCAL_SOURCE%" | findstr /I "G: My-Drive OneDrive Dropbox iCloud CloudSync" >nul && goto SWAP_ERROR
+
 if not exist "%PROD_SOURCE%" set "FAILED_PATH=FRONTEND PRODUCTION SOURCE" & set "PATH_VAL=%PROD_SOURCE%" & goto PATH_ERROR
 if not exist "%PROD_DEST%" set "FAILED_PATH=FRONTEND PRODUCTION DESTINATION" & set "PATH_VAL=%PROD_DEST%" & goto PATH_ERROR
 if not exist "%LOCAL_SOURCE%" set "FAILED_PATH=FRONTEND LOCALHOST SOURCE" & set "PATH_VAL=%LOCAL_SOURCE%" & goto PATH_ERROR
@@ -109,6 +112,9 @@ if not exist "%LOCAL_DEST%" set "FAILED_PATH=FRONTEND LOCALHOST DESTINATION" & s
 if "%SYNC_MODE%"=="FRONTEND_ONLY" goto MENU
 
 :VERIFY_BACKEND
+echo "%BACKEND_PROD_SOURCE%" | findstr /I "G: My-Drive OneDrive Dropbox iCloud CloudSync" >nul && goto SWAP_ERROR
+echo "%BACKEND_LOCAL_SOURCE%" | findstr /I "G: My-Drive OneDrive Dropbox iCloud CloudSync" >nul && goto SWAP_ERROR
+
 if not exist "%BACKEND_PROD_SOURCE%" set "FAILED_PATH=BACKEND PRODUCTION SOURCE" & set "PATH_VAL=%BACKEND_PROD_SOURCE%" & goto PATH_ERROR
 if not exist "%BACKEND_PROD_DEST%" set "FAILED_PATH=BACKEND PRODUCTION DESTINATION" & set "PATH_VAL=%BACKEND_PROD_DEST%" & goto PATH_ERROR
 if not exist "%BACKEND_LOCAL_SOURCE%" set "FAILED_PATH=BACKEND LOCALHOST SOURCE" & set "PATH_VAL=%BACKEND_LOCAL_SOURCE%" & goto PATH_ERROR
@@ -116,6 +122,8 @@ if not exist "%BACKEND_LOCAL_DEST%" set "FAILED_PATH=BACKEND LOCALHOST DESTINATI
 goto MENU
 
 :VERIFY_SINGLE
+echo "%SINGLE_SOURCE%" | findstr /I "G: My-Drive OneDrive Dropbox iCloud CloudSync" >nul && goto SWAP_ERROR
+
 if not exist "%SINGLE_SOURCE%" set "FAILED_PATH=SINGLE TARGET SOURCE" & set "PATH_VAL=%SINGLE_SOURCE%" & goto PATH_ERROR
 if not exist "%SINGLE_DEST%" set "FAILED_PATH=SINGLE TARGET DESTINATION" & set "PATH_VAL=%SINGLE_DEST%" & goto PATH_ERROR
 goto MENU
@@ -242,6 +250,26 @@ echo ------------------------------------------------------------
 echo.
 echo [!] OPERATION ABORTED. No files were read, copied, or modified.
 echo Please fix your folder name or paths before trying again.
+echo.
+pause
+color 0F
+goto SETUP_PATHS
+
+:SWAP_ERROR
+color 0C
+cls
+echo ============================================================
+echo   ❌ CRITICAL GUARDRAIL INTERCEPTION: PATH REVERSAL DETECTED
+echo ============================================================
+echo   SECURITY ALERT: You assigned a Cloud backup path 
+echo   as your [SOURCE] directory!
+echo.
+echo   Your local drive MUST be the SOURCE (where your live work is).
+echo   The cloud drive MUST be the DESTINATION (backup target).
+echo ------------------------------------------------------------
+echo   [!] OPERATION SAFELY BLOCKED to prevent wiping out local code.
+echo   Please re-run the utility and input your paths correctly.
+echo ============================================================
 echo.
 pause
 color 0F
