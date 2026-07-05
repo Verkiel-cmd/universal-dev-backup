@@ -67,7 +67,7 @@ The strict **All-or-Nothing Rule** now maps selectively against your chosen foot
 | **Path Exist Verification** | `if not exist "%TARGET%"` | Flashes UI bright red, halts all execution, prints the exact broken path string, resets to setup gate. |
 | **Data Integrity Simulation** | Robocopy `/L` Flag | Runs a dry run "scout mode" log breakdown to list files that would be modified without executing a write action. |
 | **Quote-Flooding Prevention** | Script Parsing Variable Stripping | Erases accidental encapsulation characters (`"`) to keep systemic directory queries perfectly valid. |
-| **Universal Cloud Interceptor:** | Automatically detects and halts execution if any major cloud service path (Google Drive, OneDrive, Dropbox, iCloud) is accidentally used as a local source directory. |
+| **Universal Cloud Interceptor:** | Automatically detects and halts execution if any major cloud service path (Google Drive, OneDrive, Dropbox, iCloud) is accidentally used as a local source directory. | Your `src` was protected by scanning the `PATH` input in prompt. |
 
 ---
 
