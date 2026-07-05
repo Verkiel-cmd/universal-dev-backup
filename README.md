@@ -49,6 +49,7 @@ For external developers or alternative workflows:
 
 ### 📐 Dynamic Configuration Architecture
 The script features an interactive routing step inside Option 2 that asks for your project's precise structural footprint before demanding folder paths, allowing the core engine to dynamically re-scale its lane constraints:
+
 * **Single Environment Pipeline:** Allocates and monitors exactly **2 paths** (1 local Source and 1 cloud Destination), making it perfect for rapid single-component sync setups.
 * **Frontend Only Structure:** Dynamically isolates and requests exactly **4 active Frontend paths** (Production and Localhost profiles).
 * **Backend Only Structure:** Dynamically isolates and requests exactly **4 active Backend paths** (Production and Localhost profiles).
@@ -66,6 +67,7 @@ The strict **All-or-Nothing Rule** now maps selectively against your chosen foot
 | **Path Exist Verification** | `if not exist "%TARGET%"` | Flashes UI bright red, halts all execution, prints the exact broken path string, resets to setup gate. |
 | **Data Integrity Simulation** | Robocopy `/L` Flag | Runs a dry run "scout mode" log breakdown to list files that would be modified without executing a write action. |
 | **Quote-Flooding Prevention** | Script Parsing Variable Stripping | Erases accidental encapsulation characters (`"`) to keep systemic directory queries perfectly valid. |
+| **Universal Cloud Interceptor:** | Automatically detects and halts execution if any major cloud service path (Google Drive, OneDrive, Dropbox, iCloud) is accidentally used as a local source directory. |
 
 ---
 
