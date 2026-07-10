@@ -13,9 +13,10 @@ echo               PROJECT CONFIGURATION SETUP
 echo ============================================================
 echo   [1] Use Ezeki's Default PC Paths (Fixed 8-Path Sync)
 echo   [2] Input Custom Paths (Dynamic Folder Allocator)
+echo   [3] Saved Path Profiles (Load, Save, View, or Delete)
 echo ============================================================
 echo.
-set /p path_choice="Select an option (1 or 2) then press Enter: "
+set /p path_choice="Select an option (1, 2, or 3) then press Enter: "
 
 if "%path_choice%"=="1" (
     :: Ezeki's pristine default setup - UNTOUCHED
@@ -32,11 +33,182 @@ if "%path_choice%"=="1" (
     set "BACKEND_LOCAL_SOURCE=C:\Users\ezeki\Downloads\ezeki_local-code~[student-management-system]\LOCALHOST_student-management-backend"
     set "BACKEND_LOCAL_DEST=G:\My Drive\Universal-devs-data\LOCALHOST_student-management-backend"
     
-    title %PROJECT_NAME% - Strict Guardrail Backup Utility
+    title %PROJECT_NAME% - Strict Guardrail 
+    Backup Utility
     goto VERIFY_PATHS
 )
 if "%path_choice%"=="2" goto CUSTOM_WIZARD
+if "%path_choice%"=="3" goto PROFILE_MANAGER
 goto SETUP_PATHS
+
+:PROFILE_MANAGER
+cls
+echo ============================================================
+echo             SAVED PATH PROFILES MANAGER
+echo ============================================================
+echo   [1] Load a Saved Profile
+echo   [2] View All Saved Profiles
+echo   [3] Delete a Saved Profile
+echo   [4] Go Back to Main Menu
+echo ============================================================
+echo.
+set /p prof_choice="Select an option (1-4): "
+if "%prof_choice%"=="1" goto LOAD_PROFILE
+if "%prof_choice%"=="2" goto VIEW_PROFILES
+if "%prof_choice%"=="3" goto DELETE_PROFILE
+if "%prof_choice%"=="4" goto SETUP_PATHS
+goto PROFILE_MANAGER
+
+:LOAD_PROFILE
+cls
+echo ============================================================
+echo                   LOAD PROFILE SELECTION
+echo ============================================================
+if not exist "saved_paths.txt" (
+    echo   No saved profiles found yet! Go configure a custom path first.
+    echo.
+    pause
+    goto PROFILE_MANAGER
+)
+echo   Available Saved Profiles:
+echo   ------------------------------------------------------------
+findstr /B "PROFILE:" saved_paths.txt
+echo   ------------------------------------------------------------
+echo.
+set "LOAD_TARGET="
+set /p LOAD_TARGET="Enter the EXACT Profile Name to load: "
+if "%LOAD_TARGET%"=="" goto PROFILE_MANAGER
+
+set "FOUND_PROF="
+for /f "tokens=1* delims=" %%A in (saved_paths.txt) do (
+    if "%%A"=="PROFILE:%LOAD_TARGET%" set FOUND_PROF=1
+)
+if not defined FOUND_PROF (
+    echo.
+    echo  [!] Profile "%LOAD_TARGET%" not found. Check spelling and capitalization.
+    pause
+    goto PROFILE_MANAGER
+)
+
+:: Read out variables matching this specific profile name
+for /f "usebackq tokens=2,3 delims==" %%A in (`findstr /R "^%LOAD_TARGET%\." saved_paths.txt`) do (
+    set "%%A=%%B"
+)
+echo.
+echo  [+] Profile "%LOAD_TARGET%" successfully loaded into environment memory!
+pause
+goto VERIFY_PATHS
+
+:VIEW_PROFILES
+cls
+echo ============================================================
+echo               RAW PROFILE MANIFEST REGISTRY
+echo ============================================================
+if not exist "saved_paths.txt" (
+    echo   No paths configurations have been saved yet.
+) else (
+    type saved_paths.txt
+)
+echo ============================================================
+echo.
+pause
+goto PROFILE_MANAGER
+
+:DELETE_PROFILE
+cls
+echo ============================================================
+echo                   DELETE PROFILE CONFIGURATION
+echo ============================================================
+if not exist "saved_paths.txt" (
+    echo   No profiles exist to delete.
+    pause
+    goto PROFILE_MANAGER
+)
+findstr /B "PROFILE:" saved_paths.txt
+echo ------------------------------------------------------------
+echo.
+set "DEL_TARGET="
+set /p DEL_TARGET="Enter the EXACT Profile Name to delete: "
+if "%DEL_TARGET%"=="" goto PROFILE_MANAGER
+
+:: Rewrite text file filtering out the profile marker and variables prefixed with profile name
+if exist "saved_paths.tmp" del "saved_paths.tmp"
+for /f "tokens=1* delims=" %%A in (saved_paths.txt) do (
+    echo %%A | findstr /B "PROFILE:%DEL_TARGET%" >nul
+    if errorlevel 1 (
+        echo %%A | findstr /B "%DEL_TARGET%." >nul
+        if errorlevel 1 (
+            echo %%A>>saved_paths.tmp
+        )
+    )
+)
+move /y "saved_paths.tmp" "saved_paths.txt" >nul
+echo.
+echo  [-] Profile "%DEL_TARGET%" has been scrubbed from records.
+pause
+goto PROFILE_MANAGER
+
+:SAVE_PROFILE_PROMPT
+echo.
+echo ============================================================
+echo   WOULD YOU LIKE TO SAVE THIS RUN CONTEXT AS A PROFILE?
+echo ============================================================
+echo   [1] Yes, save it to persistent disk store
+echo   [2] No, just proceed to verification menu directly
+echo ============================================================
+echo.
+set /p save_choice="Select an option (1 or 2): "
+if "%save_choice%"=="2" goto MENU
+if not "%save_choice%"=="1" goto SAVE_PROFILE_PROMPT
+
+cls
+echo ============================================================
+echo               CREATE UNIQUE PROFILE REGISTRATION
+echo ============================================================
+set "NEW_PROF_NAME="
+set /p NEW_PROF_NAME="Assign a single alphanumeric profile name (No spaces): "
+if "%NEW_PROF_NAME%"=="" goto SAVE_PROFILE_PROMPT
+
+:: Wipe out any existing entry matching this name to act as an Update mechanism
+if exist "saved_paths.txt" (
+    if exist "saved_paths.tmp" del "saved_paths.tmp"
+    for /f "tokens=1* delims=" %%A in (saved_paths.txt) do (
+        echo %%A | findstr /B "PROFILE:%NEW_PROF_NAME%" >nul
+        if errorlevel 1 (
+            echo %%A | findstr /B "%NEW_PROF_NAME%." >nul
+            if errorlevel 1 (
+                echo %%A>>saved_paths.tmp
+            )
+        )
+    )
+    move /y "saved_paths.tmp" "saved_paths.txt" >nul
+)
+
+:: Append the active profile environment block to file
+echo PROFILE:%NEW_PROF_NAME%>>saved_paths.txt
+echo %NEW_PROF_NAME%.PROJECT_NAME=%PROJECT_NAME%>>saved_paths.txt
+echo %NEW_PROF_NAME%.SYNC_MODE=%SYNC_MODE%>>saved_paths.txt
+if "%SYNC_MODE%"=="SINGLE_ENV" (
+    echo %NEW_PROF_NAME%.SINGLE_SOURCE=%SINGLE_SOURCE%>>saved_paths.txt
+    echo %NEW_PROF_NAME%.SINGLE_DEST=%SINGLE_DEST%>>saved_paths.txt
+)
+if not "%SYNC_MODE%"=="BACKEND_ONLY" if not "%SYNC_MODE%"=="SINGLE_ENV" (
+    echo %NEW_PROF_NAME%.PROD_SOURCE=%PROD_SOURCE%>>saved_paths.txt
+    echo %NEW_PROF_NAME%.PROD_DEST=%PROD_DEST%>>saved_paths.txt
+    echo %NEW_PROF_NAME%.LOCAL_SOURCE=%LOCAL_SOURCE%>>saved_paths.txt
+    echo %NEW_PROF_NAME%.LOCAL_DEST=%LOCAL_DEST%>>saved_paths.txt
+)
+if not "%SYNC_MODE%"=="FRONTEND_ONLY" if not "%SYNC_MODE%"=="SINGLE_ENV" (
+    echo %NEW_PROF_NAME%.BACKEND_PROD_SOURCE=%BACKEND_PROD_SOURCE%>>saved_paths.txt
+    echo %NEW_PROF_NAME%.BACKEND_PROD_DEST=%BACKEND_PROD_DEST%>>saved_paths.txt
+    echo %NEW_PROF_NAME%.BACKEND_LOCAL_SOURCE=%BACKEND_LOCAL_SOURCE%>>saved_paths.txt
+    echo %NEW_PROF_NAME%.BACKEND_LOCAL_DEST=%BACKEND_LOCAL_DEST%>>saved_paths.txt
+)
+echo.>>saved_paths.txt
+
+echo  [+] Profile "%NEW_PROF_NAME%" compiled and written successfully!
+pause
+goto MENU
 
 :CUSTOM_WIZARD
 cls
@@ -109,7 +281,7 @@ if not exist "%PROD_SOURCE%" set "FAILED_PATH=FRONTEND PRODUCTION SOURCE" & set 
 if not exist "%PROD_DEST%" set "FAILED_PATH=FRONTEND PRODUCTION DESTINATION" & set "PATH_VAL=%PROD_DEST%" & goto PATH_ERROR
 if not exist "%LOCAL_SOURCE%" set "FAILED_PATH=FRONTEND LOCALHOST SOURCE" & set "PATH_VAL=%LOCAL_SOURCE%" & goto PATH_ERROR
 if not exist "%LOCAL_DEST%" set "FAILED_PATH=FRONTEND LOCALHOST DESTINATION" & set "PATH_VAL=%LOCAL_DEST%" & goto PATH_ERROR
-if "%SYNC_MODE%"=="FRONTEND_ONLY" goto MENU
+if "%SYNC_MODE%"=="FRONTEND_ONLY" goto SAVE_PROFILE_PROMPT
 
 :VERIFY_BACKEND
 echo "%BACKEND_PROD_SOURCE%" | findstr /I "G: My-Drive OneDrive Dropbox iCloud CloudSync" >nul && goto SWAP_ERROR
@@ -119,14 +291,14 @@ if not exist "%BACKEND_PROD_SOURCE%" set "FAILED_PATH=BACKEND PRODUCTION SOURCE"
 if not exist "%BACKEND_PROD_DEST%" set "FAILED_PATH=BACKEND PRODUCTION DESTINATION" & set "PATH_VAL=%BACKEND_PROD_DEST%" & goto PATH_ERROR
 if not exist "%BACKEND_LOCAL_SOURCE%" set "FAILED_PATH=BACKEND LOCALHOST SOURCE" & set "PATH_VAL=%BACKEND_LOCAL_SOURCE%" & goto PATH_ERROR
 if not exist "%BACKEND_LOCAL_DEST%" set "FAILED_PATH=BACKEND LOCALHOST DESTINATION" & set "PATH_VAL=%BACKEND_LOCAL_DEST%" & goto PATH_ERROR
-goto MENU
+goto SAVE_PROFILE_PROMPT
 
 :VERIFY_SINGLE
 echo "%SINGLE_SOURCE%" | findstr /I "G: My-Drive OneDrive Dropbox iCloud CloudSync" >nul && goto SWAP_ERROR
 
 if not exist "%SINGLE_SOURCE%" set "FAILED_PATH=SINGLE TARGET SOURCE" & set "PATH_VAL=%SINGLE_SOURCE%" & goto PATH_ERROR
 if not exist "%SINGLE_DEST%" set "FAILED_PATH=SINGLE TARGET DESTINATION" & set "PATH_VAL=%SINGLE_DEST%" & goto PATH_ERROR
-goto MENU
+goto SAVE_PROFILE_PROMPT
 
 :MENU
 cls
@@ -191,7 +363,6 @@ goto SIM_DONE
 echo --- Simulating SINGLE ENVIRONMENT PIPELINE... ---
 robocopy "%SINGLE_SOURCE%" "%SINGLE_DEST%" /L /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /R:2 /W:5 /XD node_modules dist .git
 echo.
-
 :SIM_DONE
 echo ============================================================
 echo  Simulation finished! No changes were made to your cloud.
@@ -230,7 +401,6 @@ goto LIVE_DONE
 echo --- Syncing SINGLE PIPELINE to Backup Destination... ---
 robocopy "%SINGLE_SOURCE%" "%SINGLE_DEST%" /MIR /XD node_modules dist .git /R:2 /W:5
 echo.
-
 :LIVE_DONE
 echo ============================================================
 echo  Live backup completed successfully!
@@ -277,6 +447,7 @@ goto SETUP_PATHS
 
 :EXIT
 cls
-echo Exiting utility. Keep coding safely!
+echo Exiting utility.
+Keep coding safely!
 pause
 exit
