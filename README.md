@@ -55,6 +55,25 @@ The script features an interactive routing step inside Option 2 that asks for yo
 * **Backend Only Structure:** Dynamically isolates and requests exactly **4 active Backend paths** (Production and Localhost profiles).
 * **Full-Stack Combo Layout:** Unlocks the full automated tracking array for all **8 project paths** simultaneously.
 
+* ### 💾 Dynamic Profile Manager Features
+* **Save / Update Profiles:** Complete a custom path wizard run once, and optionally save the entire session memory block to disk as a persistent profile. Re-saving to an existing profile name seamlessly updates its mapped paths.
+* **Instant Load:** Read the profile manifest on startup, select your project name, and drop straight into the backup execution engine in under 5 seconds.
+* **Disk Clean Up:** Safely scrub and delete retired profile strings from records without affecting other configurations.
+
+---
+
+## ⚠️ Crucial Folder Renaming Rules (How it Behaves)
+
+When renaming project directories on your local computer, the utility relies on Windows file system architecture. Please note the following behaviors:
+
+### 1. Total Folder Renames (e.g., `project2` ➡️ `assets34`)
+* **What it does:** The engine tracks this perfectly. Because the old folder name no longer exists, the script flags the old cloud copy as an **"Extra"** directory and completely **purges/deletes it** from Google Drive to protect your storage limits. It then treats the new name as a brand-new directory and **uploads everything from scratch**.
+* **Action Required:** You must run **Option 2** to type in the new paths and overwrite your old saved profile so the script doesn't throw a `❌ CRITICAL CONFIGURATION ERROR`.
+
+### 2. Capitalization-Only Renames (e.g., `my-project` ➡️ `My-Project`)
+* **What it does:** **The script cannot detect this automatically.** Windows is *case-insensitive* and will report to `robocopy` that the folder path has not changed, causing the cloud copy to remain lowercase.
+* **Action Required:** To force Windows to recognize the casing change, temporarily rename your local folder to something else (e.g., `my-project-temp`), then rename it to your preferred capitalized title (`My-Project`). Once done, update your profile paths!
+
 ### 🛡️ Adaptive Gatekeeper Integration
 The strict **All-or-Nothing Rule** now maps selectively against your chosen footprint. If you declare a "Single Environment" or "Frontend Only" scope, the verification engine isolates its focus exclusively to those specific paths. It intentionally bypasses unselected paths, completely eliminating false-positive folder errors or input crashes on empty rows while keeping the core flashing red safety locks running at 100% on active channels.
 
