@@ -33,8 +33,7 @@ if "%path_choice%"=="1" (
     set "BACKEND_LOCAL_SOURCE=C:\Users\ezeki\Downloads\ezeki_local-code~[student-management-system]\LOCALHOST_student-management-backend"
     set "BACKEND_LOCAL_DEST=G:\My Drive\Universal-devs-data\LOCALHOST_student-management-backend"
     
-    title %PROJECT_NAME% - Strict Guardrail 
-    Backup Utility
+    title Student Management System - Strict Guardrail Backup Utility
     goto VERIFY_PATHS
 )
 if "%path_choice%"=="2" goto CUSTOM_WIZARD
@@ -90,13 +89,36 @@ if not defined FOUND_PROF (
     goto PROFILE_MANAGER
 )
 
-:: Read out variables matching this specific profile name
-for /f "usebackq tokens=2,3 delims==" %%A in (`findstr /R "^%LOAD_TARGET%\." saved_paths.txt`) do (
-    set "%%A=%%B"
+:: Clear existing active path structures to avoid residue contamination
+set "PROJECT_NAME="
+set "SYNC_MODE="
+set "SINGLE_SOURCE="
+set "SINGLE_DEST="
+set "PROD_SOURCE="
+set "PROD_DEST="
+set "LOCAL_SOURCE="
+set "LOCAL_DEST="
+set "BACKEND_PROD_SOURCE="
+set "BACKEND_PROD_DEST="
+set "BACKEND_LOCAL_SOURCE="
+set "BACKEND_LOCAL_DEST="
+
+:: Read out variables, strip the "LOAD_TARGET." prefix, and load them into session memory
+for /f "usebackq tokens=1* delims=" %%I in (`findstr /R "^%LOAD_TARGET%\." saved_paths.txt`) do (
+    for /f "tokens=1,2 delims==" %%A in ("%%I") do (
+        set "temp_var=%%A"
+        setlocal enabledelayedexpansion
+        set "clean_var=!temp_var:*%LOAD_TARGET%.=!"
+        for /f "delims=" %%C in ("!clean_var!") do (
+            endlocal
+            set "%%C=%%B"
+        )
+    )
 )
 echo.
 echo  [+] Profile "%LOAD_TARGET%" successfully loaded into environment memory!
 pause
+set "IS_LOADED_PROFILE=1"
 goto VERIFY_PATHS
 
 :VIEW_PROFILES
@@ -131,9 +153,18 @@ set "DEL_TARGET="
 set /p DEL_TARGET="Enter the EXACT Profile Name to delete: "
 if "%DEL_TARGET%"=="" goto PROFILE_MANAGER
 
-:: Rewrite text file filtering out the profile marker and variables prefixed with profile name
-if exist "saved_paths.tmp" del "saved_paths.tmp"
-for /f "tokens=1* delims=" %%A in (saved_paths.txt) do (
+set "DELETED_CONFIRM="
+:: Check if the profile exists before running deletion logic
+findstr /B "PROFILE:%DEL_TARGET%" saved_paths.txt >nul
+if errorlevel 1 (
+    echo.
+    echo  [!] Profile "%DEL_TARGET%" not found.
+    pause
+    goto PROFILE_MANAGER
+)
+
+if exist "saved_paths.tmp" del /f /q "saved_paths.tmp" >nul 2>&1
+for /f "usebackq tokens=1* delims=" %%A in ("saved_paths.txt") do (
     echo %%A | findstr /B "PROFILE:%DEL_TARGET%" >nul
     if errorlevel 1 (
         echo %%A | findstr /B "%DEL_TARGET%." >nul
@@ -142,7 +173,11 @@ for /f "tokens=1* delims=" %%A in (saved_paths.txt) do (
         )
     )
 )
-move /y "saved_paths.tmp" "saved_paths.txt" >nul
+if exist "saved_paths.tmp" (
+    move /y "saved_paths.tmp" "saved_paths.txt" >nul
+) else (
+    if exist "saved_paths.txt" del /f /q "saved_paths.txt" >nul 2>&1
+)
 echo.
 echo  [-] Profile "%DEL_TARGET%" has been scrubbed from records.
 pause
@@ -171,8 +206,8 @@ if "%NEW_PROF_NAME%"=="" goto SAVE_PROFILE_PROMPT
 
 :: Wipe out any existing entry matching this name to act as an Update mechanism
 if exist "saved_paths.txt" (
-    if exist "saved_paths.tmp" del "saved_paths.tmp"
-    for /f "tokens=1* delims=" %%A in (saved_paths.txt) do (
+    if exist "saved_paths.tmp" del /f /q "saved_paths.tmp" >nul 2>&1
+    for /f "usebackq tokens=1* delims=" %%A in ("saved_paths.txt") do (
         echo %%A | findstr /B "PROFILE:%NEW_PROF_NAME%" >nul
         if errorlevel 1 (
             echo %%A | findstr /B "%NEW_PROF_NAME%." >nul
@@ -181,7 +216,9 @@ if exist "saved_paths.txt" (
             )
         )
     )
-    move /y "saved_paths.tmp" "saved_paths.txt" >nul
+    if exist "saved_paths.tmp" (
+        move /y "saved_paths.tmp" "saved_paths.txt" >nul
+    )
 )
 
 :: Append the active profile environment block to file
@@ -281,7 +318,7 @@ if not exist "%PROD_SOURCE%" set "FAILED_PATH=FRONTEND PRODUCTION SOURCE" & set 
 if not exist "%PROD_DEST%" set "FAILED_PATH=FRONTEND PRODUCTION DESTINATION" & set "PATH_VAL=%PROD_DEST%" & goto PATH_ERROR
 if not exist "%LOCAL_SOURCE%" set "FAILED_PATH=FRONTEND LOCALHOST SOURCE" & set "PATH_VAL=%LOCAL_SOURCE%" & goto PATH_ERROR
 if not exist "%LOCAL_DEST%" set "FAILED_PATH=FRONTEND LOCALHOST DESTINATION" & set "PATH_VAL=%LOCAL_DEST%" & goto PATH_ERROR
-if "%SYNC_MODE%"=="FRONTEND_ONLY" goto SAVE_PROFILE_PROMPT
+if "%SYNC_MODE%"=="FRONTEND_ONLY" goto CHECK_ROUTE_DECISION
 
 :VERIFY_BACKEND
 echo "%BACKEND_PROD_SOURCE%" | findstr /I "G: My-Drive OneDrive Dropbox iCloud CloudSync" >nul && goto SWAP_ERROR
@@ -291,13 +328,20 @@ if not exist "%BACKEND_PROD_SOURCE%" set "FAILED_PATH=BACKEND PRODUCTION SOURCE"
 if not exist "%BACKEND_PROD_DEST%" set "FAILED_PATH=BACKEND PRODUCTION DESTINATION" & set "PATH_VAL=%BACKEND_PROD_DEST%" & goto PATH_ERROR
 if not exist "%BACKEND_LOCAL_SOURCE%" set "FAILED_PATH=BACKEND LOCALHOST SOURCE" & set "PATH_VAL=%BACKEND_LOCAL_SOURCE%" & goto PATH_ERROR
 if not exist "%BACKEND_LOCAL_DEST%" set "FAILED_PATH=BACKEND LOCALHOST DESTINATION" & set "PATH_VAL=%BACKEND_LOCAL_DEST%" & goto PATH_ERROR
-goto SAVE_PROFILE_PROMPT
+goto CHECK_ROUTE_DECISION
 
 :VERIFY_SINGLE
 echo "%SINGLE_SOURCE%" | findstr /I "G: My-Drive OneDrive Dropbox iCloud CloudSync" >nul && goto SWAP_ERROR
 
 if not exist "%SINGLE_SOURCE%" set "FAILED_PATH=SINGLE TARGET SOURCE" & set "PATH_VAL=%SINGLE_SOURCE%" & goto PATH_ERROR
 if not exist "%SINGLE_DEST%" set "FAILED_PATH=SINGLE TARGET DESTINATION" & set "PATH_VAL=%SINGLE_DEST%" & goto PATH_ERROR
+goto CHECK_ROUTE_DECISION
+
+:CHECK_ROUTE_DECISION
+if "%IS_LOADED_PROFILE%"=="1" (
+    set "IS_LOADED_PROFILE="
+    goto MENU
+)
 goto SAVE_PROFILE_PROMPT
 
 :MENU
@@ -447,7 +491,6 @@ goto SETUP_PATHS
 
 :EXIT
 cls
-echo Exiting utility.
-Keep coding safely!
+echo Exiting utility. Keep coding safely!
 pause
 exit
