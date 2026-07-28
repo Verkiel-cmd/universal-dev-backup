@@ -367,13 +367,15 @@ echo ============================================================
 echo   [1] RUN SAFE SIMULATION (Check changes without overwriting)
 echo   [2] RUN LIVE BACKUP     (Mirror actual project directories)
 echo   [3] Exit Utility
+echo   [4] Go Back to Main Menu
 echo ============================================================
 echo.
-set /p action_choice="Select an option (1, 2, or 3) then press Enter: "
+set /p action_choice="Select an option (1, 2, 3, or 4) then press Enter: "
 
 if "%action_choice%"=="1" goto SIMULATE
 if "%action_choice%"=="2" goto LIVE
 if "%action_choice%"=="3" goto EXIT
+if "%action_choice%"=="4" goto SETUP_PATHS
 goto MENU
 
 :SIMULATE
