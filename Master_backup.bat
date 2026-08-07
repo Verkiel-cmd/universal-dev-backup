@@ -389,25 +389,25 @@ if "%SYNC_MODE%"=="BACKEND_ONLY" goto SIM_BACKEND
 
 :SIM_FRONTEND
 echo --- Simulating FRONTEND PRODUCTION... ---
-robocopy "%PROD_SOURCE%" "%PROD_DEST%" /L /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /R:2 /W:5 /XD node_modules dist .git
+robocopy "%PROD_SOURCE%" "%PROD_DEST%" /L /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /R:2 /W:5 /XD node_modules dist .git build .gradle .idea .cxx
 echo.
 echo --- Simulating FRONTEND LOCALHOST... ---
-robocopy "%LOCAL_SOURCE%" "%LOCAL_DEST%" /L /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /R:2 /W:5 /XD node_modules dist .git
+robocopy "%LOCAL_SOURCE%" "%LOCAL_DEST%" /L /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /R:2 /W:5 /XD node_modules dist .git build .gradle .idea .cxx
 echo.
 if "%SYNC_MODE%"=="FRONTEND_ONLY" goto SIM_DONE
 
 :SIM_BACKEND
 echo --- Simulating BACKEND PRODUCTION... ---
-robocopy "%BACKEND_PROD_SOURCE%" "%BACKEND_PROD_DEST%" /L /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /R:2 /W:5 /XD node_modules dist .git
+robocopy "%BACKEND_PROD_SOURCE%" "%BACKEND_PROD_DEST%" /L /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /R:2 /W:5 /XD node_modules dist .git build .gradle .idea .cxx
 echo.
 echo --- Simulating BACKEND LOCALHOST... ---
-robocopy "%BACKEND_LOCAL_SOURCE%" "%BACKEND_LOCAL_DEST%" /L /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /R:2 /W:5 /XD node_modules dist .git
+robocopy "%BACKEND_LOCAL_SOURCE%" "%BACKEND_LOCAL_DEST%" /L /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /R:2 /W:5 /XD node_modules dist .git build .gradle .idea .cxx
 echo.
 goto SIM_DONE
 
 :SIM_SINGLE
 echo --- Simulating SINGLE ENVIRONMENT PIPELINE... ---
-robocopy "%SINGLE_SOURCE%" "%SINGLE_DEST%" /L /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /R:2 /W:5 /XD node_modules dist .git
+robocopy "%SINGLE_SOURCE%" "%SINGLE_DEST%" /L /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /R:2 /W:5 /XD node_modules dist .git build .gradle .idea .cxx
 echo.
 :SIM_DONE
 echo ============================================================
@@ -427,25 +427,25 @@ if "%SYNC_MODE%"=="BACKEND_ONLY" goto LIVE_BACKEND
 
 :LIVE_FRONTEND
 echo --- Syncing FRONTEND PRODUCTION to Backup Destination... ---
-robocopy "%PROD_SOURCE%" "%PROD_DEST%" /MIR /XD node_modules dist .git /R:2 /W:5
+robocopy "%PROD_SOURCE%" "%PROD_DEST%" /MIR /XD node_modules dist .git build .gradle .idea .cxx /R:2 /W:5
 echo.
 echo --- Syncing FRONTEND LOCALHOST to Backup Destination... ---
-robocopy "%LOCAL_SOURCE%" "%LOCAL_DEST%" /MIR /XD node_modules dist .git /R:2 /W:5
+robocopy "%LOCAL_SOURCE%" "%LOCAL_DEST%" /MIR /XD node_modules dist .git build .gradle .idea .cxx /R:2 /W:5
 echo.
 if "%SYNC_MODE%"=="FRONTEND_ONLY" goto LIVE_DONE
 
 :LIVE_BACKEND
 echo --- Syncing BACKEND PRODUCTION to Backup Destination... ---
-robocopy "%BACKEND_PROD_SOURCE%" "%BACKEND_PROD_DEST%" /MIR /XD node_modules dist .git /R:2 /W:5
+robocopy "%BACKEND_PROD_SOURCE%" "%BACKEND_PROD_DEST%" /MIR /XD node_modules dist .git build .gradle .idea .cxx /R:2 /W:5
 echo.
 echo --- Syncing BACKEND LOCALHOST to Backup Destination... ---
-robocopy "%BACKEND_LOCAL_SOURCE%" "%BACKEND_LOCAL_DEST%" /MIR /XD node_modules dist .git /R:2 /W:5
+robocopy "%BACKEND_LOCAL_SOURCE%" "%BACKEND_LOCAL_DEST%" /MIR /XD node_modules dist .git build .gradle .idea .cxx /R:2 /W:5
 echo.
 goto LIVE_DONE
 
 :LIVE_SINGLE
 echo --- Syncing SINGLE PIPELINE to Backup Destination... ---
-robocopy "%SINGLE_SOURCE%" "%SINGLE_DEST%" /MIR /XD node_modules dist .git /R:2 /W:5
+robocopy "%SINGLE_SOURCE%" "%SINGLE_DEST%" /MIR /XD node_modules dist .git build .gradle .idea .cxx /R:2 /W:5
 echo.
 :LIVE_DONE
 echo ============================================================
