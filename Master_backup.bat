@@ -43,14 +43,15 @@ goto SETUP_PATHS
 :PROFILE_MANAGER
 cls
 echo ============================================================
-echo             SAVED PATH PROFILES MANAGER
+echo               SAVED PATH PROFILES MANAGER
 echo ============================================================
-echo   [1] Load a Saved Profile
-echo   [2] View All Saved Profiles
-echo   [3] Delete a Saved Profile
-echo   [4] Go Back to Main Menu
+echo    [1] Load a Saved Profile
+echo    [2] View All Saved Profiles
+echo    [3] Delete a Saved Profile
+echo    [4] Go Back to Main Menu
 echo ============================================================
 echo.
+set "prof_choice="
 set /p prof_choice="Select an option (1-4): "
 if "%prof_choice%"=="1" goto LOAD_PROFILE
 if "%prof_choice%"=="2" goto VIEW_PROFILES
@@ -61,26 +62,26 @@ goto PROFILE_MANAGER
 :LOAD_PROFILE
 cls
 echo ============================================================
-echo                   LOAD PROFILE SELECTION
+echo                    LOAD PROFILE SELECTION
 echo ============================================================
-if not exist "saved_paths.txt" (
-    echo   No saved profiles found yet! Go configure a custom path first.
+if not exist "%~dp0saved_paths.txt" (
+    echo    No saved profiles found yet! Go configure a custom path first.
     echo.
     pause
     goto PROFILE_MANAGER
 )
-echo   Available Saved Profiles:
-echo   ------------------------------------------------------------
-findstr /B "PROFILE:" saved_paths.txt
-echo   ------------------------------------------------------------
+echo    Available Saved Profiles:
+echo    ------------------------------------------------------------
+findstr /B "PROFILE:" "%~dp0saved_paths.txt"
+echo    ------------------------------------------------------------
 echo.
 set "LOAD_TARGET="
 set /p LOAD_TARGET="Enter the EXACT Profile Name to load: "
 if "%LOAD_TARGET%"=="" goto PROFILE_MANAGER
 
 set "FOUND_PROF="
-for /f "tokens=1* delims=" %%A in (saved_paths.txt) do (
-    if "%%A"=="PROFILE:%LOAD_TARGET%" set FOUND_PROF=1
+for /f "tokens=1* delims=" %%A in ('findstr /B /C:"PROFILE:%LOAD_TARGET%" "%~dp0saved_paths.txt"') do (
+    set FOUND_PROF=1
 )
 if not defined FOUND_PROF (
     echo.
@@ -103,18 +104,13 @@ set "BACKEND_PROD_DEST="
 set "BACKEND_LOCAL_SOURCE="
 set "BACKEND_LOCAL_DEST="
 
-:: Read out variables, strip the "LOAD_TARGET." prefix, and load them into session memory
-for /f "usebackq tokens=1* delims=" %%I in (`findstr /R "^%LOAD_TARGET%\." saved_paths.txt`) do (
-    for /f "tokens=1,2 delims==" %%A in ("%%I") do (
-        set "temp_var=%%A"
-        setlocal enabledelayedexpansion
-        set "clean_var=!temp_var:*%LOAD_TARGET%.=!"
-        for /f "delims=" %%C in ("!clean_var!") do (
-            endlocal
-            set "%%C=%%B"
-        )
+:: Leak-free variable loader (No setlocal stack overflow)
+for /f "usebackq tokens=1* delims==" %%A in (`findstr /R "^%LOAD_TARGET%\." "%~dp0saved_paths.txt"`) do (
+    for /f "tokens=2 delims=." %%K in ("%%A") do (
+        set "%%K=%%B"
     )
 )
+
 echo.
 echo  [+] Profile "%LOAD_TARGET%" successfully loaded into environment memory!
 pause
@@ -124,12 +120,12 @@ goto VERIFY_PATHS
 :VIEW_PROFILES
 cls
 echo ============================================================
-echo               RAW PROFILE MANIFEST REGISTRY
+echo                RAW PROFILE MANIFEST REGISTRY
 echo ============================================================
-if not exist "saved_paths.txt" (
-    echo   No paths configurations have been saved yet.
+if not exist "%~dp0saved_paths.txt" (
+    echo    No paths configurations have been saved yet.
 ) else (
-    type saved_paths.txt
+    type "%~dp0saved_paths.txt"
 )
 echo ============================================================
 echo.
@@ -139,23 +135,21 @@ goto PROFILE_MANAGER
 :DELETE_PROFILE
 cls
 echo ============================================================
-echo                   DELETE PROFILE CONFIGURATION
+echo               DELETE PROFILE CONFIGURATION
 echo ============================================================
-if not exist "saved_paths.txt" (
-    echo   No profiles exist to delete.
+if not exist "%~dp0saved_paths.txt" (
+    echo    No profiles exist to delete.
     pause
     goto PROFILE_MANAGER
 )
-findstr /B "PROFILE:" saved_paths.txt
+findstr /B "PROFILE:" "%~dp0saved_paths.txt"
 echo ------------------------------------------------------------
 echo.
 set "DEL_TARGET="
 set /p DEL_TARGET="Enter the EXACT Profile Name to delete: "
 if "%DEL_TARGET%"=="" goto PROFILE_MANAGER
 
-set "DELETED_CONFIRM="
-:: Check if the profile exists before running deletion logic
-findstr /B "PROFILE:%DEL_TARGET%" saved_paths.txt >nul
+findstr /B /C:"PROFILE:%DEL_TARGET%" "%~dp0saved_paths.txt" >nul
 if errorlevel 1 (
     echo.
     echo  [!] Profile "%DEL_TARGET%" not found.
@@ -163,20 +157,20 @@ if errorlevel 1 (
     goto PROFILE_MANAGER
 )
 
-if exist "saved_paths.tmp" del /f /q "saved_paths.tmp" >nul 2>&1
-for /f "usebackq tokens=1* delims=" %%A in ("saved_paths.txt") do (
-    echo %%A | findstr /B "PROFILE:%DEL_TARGET%" >nul
+if exist "%~dp0saved_paths.tmp" del /f /q "%~dp0saved_paths.tmp" >nul 2>&1
+for /f "usebackq tokens=1* delims=" %%A in ("%~dp0saved_paths.txt") do (
+    echo %%A ^| findstr /B /C:"PROFILE:%DEL_TARGET%" >nul
     if errorlevel 1 (
-        echo %%A | findstr /B "%DEL_TARGET%." >nul
+        echo %%A ^| findstr /B /C:"%DEL_TARGET%." >nul
         if errorlevel 1 (
-            echo %%A>>saved_paths.tmp
+            echo %%A>>"%~dp0saved_paths.tmp"
         )
     )
 )
-if exist "saved_paths.tmp" (
-    move /y "saved_paths.tmp" "saved_paths.txt" >nul
+if exist "%~dp0saved_paths.tmp" (
+    move /y "%~dp0saved_paths.tmp" "%~dp0saved_paths.txt" >nul
 ) else (
-    if exist "saved_paths.txt" del /f /q "saved_paths.txt" >nul 2>&1
+    if exist "%~dp0saved_paths.txt" del /f /q "%~dp0saved_paths.txt" >nul 2>&1
 )
 echo.
 echo  [-] Profile "%DEL_TARGET%" has been scrubbed from records.
@@ -186,62 +180,63 @@ goto PROFILE_MANAGER
 :SAVE_PROFILE_PROMPT
 echo.
 echo ============================================================
-echo   WOULD YOU LIKE TO SAVE THIS RUN CONTEXT AS A PROFILE?
+echo    WOULD YOU LIKE TO SAVE THIS RUN CONTEXT AS A PROFILE?
 echo ============================================================
-echo   [1] Yes, save it to persistent disk store
-echo   [2] No, just proceed to verification menu directly
+echo    [1] Yes, save it to persistent disk store
+echo    [2] No, just proceed to verification menu directly
 echo ============================================================
 echo.
+set "save_choice="
 set /p save_choice="Select an option (1 or 2): "
 if "%save_choice%"=="2" goto MENU
 if not "%save_choice%"=="1" goto SAVE_PROFILE_PROMPT
 
 cls
 echo ============================================================
-echo               CREATE UNIQUE PROFILE REGISTRATION
+echo                CREATE UNIQUE PROFILE REGISTRATION
 echo ============================================================
 set "NEW_PROF_NAME="
 set /p NEW_PROF_NAME="Assign a single alphanumeric profile name (No spaces): "
 if "%NEW_PROF_NAME%"=="" goto SAVE_PROFILE_PROMPT
 
-:: Wipe out any existing entry matching this name to act as an Update mechanism
-if exist "saved_paths.txt" (
-    if exist "saved_paths.tmp" del /f /q "saved_paths.tmp" >nul 2>&1
-    for /f "usebackq tokens=1* delims=" %%A in ("saved_paths.txt") do (
-        echo %%A | findstr /B "PROFILE:%NEW_PROF_NAME%" >nul
+:: Overwrite existing entry if name matches
+if exist "%~dp0saved_paths.txt" (
+    if exist "%~dp0saved_paths.tmp" del /f /q "%~dp0saved_paths.tmp" >nul 2>&1
+    for /f "usebackq tokens=1* delims=" %%A in ("%~dp0saved_paths.txt") do (
+        echo %%A ^| findstr /B /C:"PROFILE:%NEW_PROF_NAME%" >nul
         if errorlevel 1 (
-            echo %%A | findstr /B "%NEW_PROF_NAME%." >nul
+            echo %%A ^| findstr /B /C:"%NEW_PROF_NAME%." >nul
             if errorlevel 1 (
-                echo %%A>>saved_paths.tmp
+                echo %%A>>"%~dp0saved_paths.tmp"
             )
         )
     )
-    if exist "saved_paths.tmp" (
-        move /y "saved_paths.tmp" "saved_paths.txt" >nul
+    if exist "%~dp0saved_paths.tmp" (
+        move /y "%~dp0saved_paths.tmp" "%~dp0saved_paths.txt" >nul
     )
 )
 
 :: Append the active profile environment block to file
-echo PROFILE:%NEW_PROF_NAME%>>saved_paths.txt
-echo %NEW_PROF_NAME%.PROJECT_NAME=%PROJECT_NAME%>>saved_paths.txt
-echo %NEW_PROF_NAME%.SYNC_MODE=%SYNC_MODE%>>saved_paths.txt
+echo PROFILE:%NEW_PROF_NAME%>>"%~dp0saved_paths.txt"
+echo %NEW_PROF_NAME%.PROJECT_NAME=%PROJECT_NAME%>>"%~dp0saved_paths.txt"
+echo %NEW_PROF_NAME%.SYNC_MODE=%SYNC_MODE%>>"%~dp0saved_paths.txt"
 if "%SYNC_MODE%"=="SINGLE_ENV" (
-    echo %NEW_PROF_NAME%.SINGLE_SOURCE=%SINGLE_SOURCE%>>saved_paths.txt
-    echo %NEW_PROF_NAME%.SINGLE_DEST=%SINGLE_DEST%>>saved_paths.txt
+    echo %NEW_PROF_NAME%.SINGLE_SOURCE=%SINGLE_SOURCE%>>"%~dp0saved_paths.txt"
+    echo %NEW_PROF_NAME%.SINGLE_DEST=%SINGLE_DEST%>>"%~dp0saved_paths.txt"
 )
 if not "%SYNC_MODE%"=="BACKEND_ONLY" if not "%SYNC_MODE%"=="SINGLE_ENV" (
-    echo %NEW_PROF_NAME%.PROD_SOURCE=%PROD_SOURCE%>>saved_paths.txt
-    echo %NEW_PROF_NAME%.PROD_DEST=%PROD_DEST%>>saved_paths.txt
-    echo %NEW_PROF_NAME%.LOCAL_SOURCE=%LOCAL_SOURCE%>>saved_paths.txt
-    echo %NEW_PROF_NAME%.LOCAL_DEST=%LOCAL_DEST%>>saved_paths.txt
+    echo %NEW_PROF_NAME%.PROD_SOURCE=%PROD_SOURCE%>>"%~dp0saved_paths.txt"
+    echo %NEW_PROF_NAME%.PROD_DEST=%PROD_DEST%>>"%~dp0saved_paths.txt"
+    echo %NEW_PROF_NAME%.LOCAL_SOURCE=%LOCAL_SOURCE%>>"%~dp0saved_paths.txt"
+    echo %NEW_PROF_NAME%.LOCAL_DEST=%LOCAL_DEST%>>"%~dp0saved_paths.txt"
 )
 if not "%SYNC_MODE%"=="FRONTEND_ONLY" if not "%SYNC_MODE%"=="SINGLE_ENV" (
-    echo %NEW_PROF_NAME%.BACKEND_PROD_SOURCE=%BACKEND_PROD_SOURCE%>>saved_paths.txt
-    echo %NEW_PROF_NAME%.BACKEND_PROD_DEST=%BACKEND_PROD_DEST%>>saved_paths.txt
-    echo %NEW_PROF_NAME%.BACKEND_LOCAL_SOURCE=%BACKEND_LOCAL_SOURCE%>>saved_paths.txt
-    echo %NEW_PROF_NAME%.BACKEND_LOCAL_DEST=%BACKEND_LOCAL_DEST%>>saved_paths.txt
+    echo %NEW_PROF_NAME%.BACKEND_PROD_SOURCE=%BACKEND_PROD_SOURCE%>>"%~dp0saved_paths.txt"
+    echo %NEW_PROF_NAME%.BACKEND_PROD_DEST=%BACKEND_PROD_DEST%>>"%~dp0saved_paths.txt"
+    echo %NEW_PROF_NAME%.BACKEND_LOCAL_SOURCE=%BACKEND_LOCAL_SOURCE%>>"%~dp0saved_paths.txt"
+    echo %NEW_PROF_NAME%.BACKEND_LOCAL_DEST=%BACKEND_LOCAL_DEST%>>"%~dp0saved_paths.txt"
 )
-echo.>>saved_paths.txt
+echo.>>"%~dp0saved_paths.txt"
 
 echo  [+] Profile "%NEW_PROF_NAME%" compiled and written successfully!
 pause
