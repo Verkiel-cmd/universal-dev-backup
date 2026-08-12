@@ -220,17 +220,40 @@ if exist "%~dp0saved_paths.txt" (
 echo PROFILE:%NEW_PROF_NAME%>>"%~dp0saved_paths.txt"
 echo %NEW_PROF_NAME%.PROJECT_NAME=%PROJECT_NAME%>>"%~dp0saved_paths.txt"
 echo %NEW_PROF_NAME%.SYNC_MODE=%SYNC_MODE%>>"%~dp0saved_paths.txt"
+
 if "%SYNC_MODE%"=="SINGLE_ENV" (
     echo %NEW_PROF_NAME%.SINGLE_SOURCE=%SINGLE_SOURCE%>>"%~dp0saved_paths.txt"
     echo %NEW_PROF_NAME%.SINGLE_DEST=%SINGLE_DEST%>>"%~dp0saved_paths.txt"
 )
-if not "%SYNC_MODE%"=="BACKEND_ONLY" if not "%SYNC_MODE%"=="SINGLE_ENV" (
+if "%SYNC_MODE%"=="FRONTEND_ONLY" (
     echo %NEW_PROF_NAME%.PROD_SOURCE=%PROD_SOURCE%>>"%~dp0saved_paths.txt"
     echo %NEW_PROF_NAME%.PROD_DEST=%PROD_DEST%>>"%~dp0saved_paths.txt"
     echo %NEW_PROF_NAME%.LOCAL_SOURCE=%LOCAL_SOURCE%>>"%~dp0saved_paths.txt"
     echo %NEW_PROF_NAME%.LOCAL_DEST=%LOCAL_DEST%>>"%~dp0saved_paths.txt"
 )
-if not "%SYNC_MODE%"=="FRONTEND_ONLY" if not "%SYNC_MODE%"=="SINGLE_ENV" (
+if "%SYNC_MODE%"=="BACKEND_ONLY" (
+    echo %NEW_PROF_NAME%.BACKEND_PROD_SOURCE=%BACKEND_PROD_SOURCE%>>"%~dp0saved_paths.txt"
+    echo %NEW_PROF_NAME%.BACKEND_PROD_DEST=%BACKEND_PROD_DEST%>>"%~dp0saved_paths.txt"
+    echo %NEW_PROF_NAME%.BACKEND_LOCAL_SOURCE=%BACKEND_LOCAL_SOURCE%>>"%~dp0saved_paths.txt"
+    echo %NEW_PROF_NAME%.BACKEND_LOCAL_DEST=%BACKEND_LOCAL_DEST%>>"%~dp0saved_paths.txt"
+)
+if "%SYNC_MODE%"=="LOCALHOST_ONLY" (
+    echo %NEW_PROF_NAME%.LOCAL_SOURCE=%LOCAL_SOURCE%>>"%~dp0saved_paths.txt"
+    echo %NEW_PROF_NAME%.LOCAL_DEST=%LOCAL_DEST%>>"%~dp0saved_paths.txt"
+    echo %NEW_PROF_NAME%.BACKEND_LOCAL_SOURCE=%BACKEND_LOCAL_SOURCE%>>"%~dp0saved_paths.txt"
+    echo %NEW_PROF_NAME%.BACKEND_LOCAL_DEST=%BACKEND_LOCAL_DEST%>>"%~dp0saved_paths.txt"
+)
+if "%SYNC_MODE%"=="PROD_ONLY" (
+    echo %NEW_PROF_NAME%.PROD_SOURCE=%PROD_SOURCE%>>"%~dp0saved_paths.txt"
+    echo %NEW_PROF_NAME%.PROD_DEST=%PROD_DEST%>>"%~dp0saved_paths.txt"
+    echo %NEW_PROF_NAME%.BACKEND_PROD_SOURCE=%BACKEND_PROD_SOURCE%>>"%~dp0saved_paths.txt"
+    echo %NEW_PROF_NAME%.BACKEND_PROD_DEST=%BACKEND_PROD_DEST%>>"%~dp0saved_paths.txt"
+)
+if "%SYNC_MODE%"=="FULL_STACK" (
+    echo %NEW_PROF_NAME%.PROD_SOURCE=%PROD_SOURCE%>>"%~dp0saved_paths.txt"
+    echo %NEW_PROF_NAME%.PROD_DEST=%PROD_DEST%>>"%~dp0saved_paths.txt"
+    echo %NEW_PROF_NAME%.LOCAL_SOURCE=%LOCAL_SOURCE%>>"%~dp0saved_paths.txt"
+    echo %NEW_PROF_NAME%.LOCAL_DEST=%LOCAL_DEST%>>"%~dp0saved_paths.txt"
     echo %NEW_PROF_NAME%.BACKEND_PROD_SOURCE=%BACKEND_PROD_SOURCE%>>"%~dp0saved_paths.txt"
     echo %NEW_PROF_NAME%.BACKEND_PROD_DEST=%BACKEND_PROD_DEST%>>"%~dp0saved_paths.txt"
     echo %NEW_PROF_NAME%.BACKEND_LOCAL_SOURCE=%BACKEND_LOCAL_SOURCE%>>"%~dp0saved_paths.txt"
@@ -250,17 +273,21 @@ echo ============================================================
 echo  What structural components do you want to sync?
 echo ------------------------------------------------------------
 echo   [1] Single Environment Pipeline (2 Folders - 1 Src, 1 Dest)
-echo   [2] Frontend Architecture Only  (4 Folders - Local + Prod)
-echo   [3] Backend Architecture Only   (4 Folders - Local + Prod)
-echo   [4] Full-Stack Combo Ecosystem   (8 Folders - All Profiles)
+echo   [2] Frontend Architecture Only  (4 Folders - FE Local + FE Prod)
+echo   [3] Backend Architecture Only   (4 Folders - BE Local + BE Prod)
+echo   [4] All Localhost Environments  (4 Folders - FE Local + BE Local)
+echo   [5] All Production Environments (4 Folders - FE Prod + BE Prod)
+echo   [6] Full-Stack Combo Ecosystem  (8 Folders - All Profiles)
 echo ============================================================
 echo.
-set /p sync_scope="Enter choice (1, 2, 3, or 4): "
+set /p sync_scope="Enter choice (1, 2, 3, 4, 5, or 6): "
 
 if "%sync_scope%"=="1" set "SYNC_MODE=SINGLE_ENV" & goto CUSTOM_INPUT
 if "%sync_scope%"=="2" set "SYNC_MODE=FRONTEND_ONLY" & goto CUSTOM_INPUT
 if "%sync_scope%"=="3" set "SYNC_MODE=BACKEND_ONLY" & goto CUSTOM_INPUT
-if "%sync_scope%"=="4" set "SYNC_MODE=FULL_STACK" & goto CUSTOM_INPUT
+if "%sync_scope%"=="4" set "SYNC_MODE=LOCALHOST_ONLY" & goto CUSTOM_INPUT
+if "%sync_scope%"=="5" set "SYNC_MODE=PROD_ONLY" & goto CUSTOM_INPUT
+if "%sync_scope%"=="6" set "SYNC_MODE=FULL_STACK" & goto CUSTOM_INPUT
 goto CUSTOM_WIZARD
 
 :CUSTOM_INPUT
@@ -271,7 +298,11 @@ echo ============================================================
 set /p PROJECT_NAME="Enter Project Name: "
 
 if "%SYNC_MODE%"=="SINGLE_ENV" goto INPUT_SINGLE
+if "%SYNC_MODE%"=="FRONTEND_ONLY" goto INPUT_FRONTEND
 if "%SYNC_MODE%"=="BACKEND_ONLY" goto INPUT_BACKEND
+if "%SYNC_MODE%"=="LOCALHOST_ONLY" goto INPUT_LOCALHOST
+if "%SYNC_MODE%"=="PROD_ONLY" goto INPUT_PROD
+if "%SYNC_MODE%"=="FULL_STACK" goto INPUT_FULLSTACK
 
 :INPUT_FRONTEND
 echo.
@@ -280,9 +311,42 @@ set /p PROD_SOURCE="Enter FRONTEND PRODUCTION Source Path: "
 set /p PROD_DEST="Enter FRONTEND PRODUCTION Destination Path: "
 set /p LOCAL_SOURCE="Enter FRONTEND LOCALHOST Source Path: "
 set /p LOCAL_DEST="Enter FRONTEND LOCALHOST Destination Path: "
-if "%SYNC_MODE%"=="FRONTEND_ONLY" goto VERIFY_PATHS
+goto VERIFY_PATHS
 
 :INPUT_BACKEND
+echo.
+echo --- [BACKEND CHANNELS REGISTRATION] ---
+set /p BACKEND_PROD_SOURCE="Enter BACKEND PRODUCTION Source Path: "
+set /p BACKEND_PROD_DEST="Enter BACKEND PRODUCTION Destination Path: "
+set /p BACKEND_LOCAL_SOURCE="Enter BACKEND LOCALHOST Source Path: "
+set /p BACKEND_LOCAL_DEST="Enter BACKEND LOCALHOST Destination Path: "
+goto VERIFY_PATHS
+
+:INPUT_LOCALHOST
+echo.
+echo --- [ALL LOCALHOST CHANNELS REGISTRATION] ---
+set /p LOCAL_SOURCE="Enter FRONTEND LOCALHOST Source Path: "
+set /p LOCAL_DEST="Enter FRONTEND LOCALHOST Destination Path: "
+set /p BACKEND_LOCAL_SOURCE="Enter BACKEND LOCALHOST Source Path: "
+set /p BACKEND_LOCAL_DEST="Enter BACKEND LOCALHOST Destination Path: "
+goto VERIFY_PATHS
+
+:INPUT_PROD
+echo.
+echo --- [ALL PRODUCTION CHANNELS REGISTRATION] ---
+set /p PROD_SOURCE="Enter FRONTEND PRODUCTION Source Path: "
+set /p PROD_DEST="Enter FRONTEND PRODUCTION Destination Path: "
+set /p BACKEND_PROD_SOURCE="Enter BACKEND PRODUCTION Source Path: "
+set /p BACKEND_PROD_DEST="Enter BACKEND PRODUCTION Destination Path: "
+goto VERIFY_PATHS
+
+:INPUT_FULLSTACK
+echo.
+echo --- [FRONTEND CHANNELS REGISTRATION] ---
+set /p PROD_SOURCE="Enter FRONTEND PRODUCTION Source Path: "
+set /p PROD_DEST="Enter FRONTEND PRODUCTION Destination Path: "
+set /p LOCAL_SOURCE="Enter FRONTEND LOCALHOST Source Path: "
+set /p LOCAL_DEST="Enter FRONTEND LOCALHOST Destination Path: "
 echo.
 echo --- [BACKEND CHANNELS REGISTRATION] ---
 set /p BACKEND_PROD_SOURCE="Enter BACKEND PRODUCTION Source Path: "
@@ -303,7 +367,11 @@ cls
 echo Verification: Checking if chosen targets are valid...
 
 if "%SYNC_MODE%"=="SINGLE_ENV" goto VERIFY_SINGLE
+if "%SYNC_MODE%"=="FRONTEND_ONLY" goto VERIFY_FRONTEND
 if "%SYNC_MODE%"=="BACKEND_ONLY" goto VERIFY_BACKEND
+if "%SYNC_MODE%"=="LOCALHOST_ONLY" goto VERIFY_LOCALHOST
+if "%SYNC_MODE%"=="PROD_ONLY" goto VERIFY_PROD
+if "%SYNC_MODE%"=="FULL_STACK" goto VERIFY_FULLSTACK
 
 :VERIFY_FRONTEND
 echo "%PROD_SOURCE%" | findstr /I "G: My-Drive OneDrive Dropbox iCloud CloudSync" >nul && goto SWAP_ERROR
@@ -313,12 +381,48 @@ if not exist "%PROD_SOURCE%" set "FAILED_PATH=FRONTEND PRODUCTION SOURCE" & set 
 if not exist "%PROD_DEST%" set "FAILED_PATH=FRONTEND PRODUCTION DESTINATION" & set "PATH_VAL=%PROD_DEST%" & goto PATH_ERROR
 if not exist "%LOCAL_SOURCE%" set "FAILED_PATH=FRONTEND LOCALHOST SOURCE" & set "PATH_VAL=%LOCAL_SOURCE%" & goto PATH_ERROR
 if not exist "%LOCAL_DEST%" set "FAILED_PATH=FRONTEND LOCALHOST DESTINATION" & set "PATH_VAL=%LOCAL_DEST%" & goto PATH_ERROR
-if "%SYNC_MODE%"=="FRONTEND_ONLY" goto CHECK_ROUTE_DECISION
+goto CHECK_ROUTE_DECISION
 
 :VERIFY_BACKEND
 echo "%BACKEND_PROD_SOURCE%" | findstr /I "G: My-Drive OneDrive Dropbox iCloud CloudSync" >nul && goto SWAP_ERROR
 echo "%BACKEND_LOCAL_SOURCE%" | findstr /I "G: My-Drive OneDrive Dropbox iCloud CloudSync" >nul && goto SWAP_ERROR
 
+if not exist "%BACKEND_PROD_SOURCE%" set "FAILED_PATH=BACKEND PRODUCTION SOURCE" & set "PATH_VAL=%BACKEND_PROD_SOURCE%" & goto PATH_ERROR
+if not exist "%BACKEND_PROD_DEST%" set "FAILED_PATH=BACKEND PRODUCTION DESTINATION" & set "PATH_VAL=%BACKEND_PROD_DEST%" & goto PATH_ERROR
+if not exist "%BACKEND_LOCAL_SOURCE%" set "FAILED_PATH=BACKEND LOCALHOST SOURCE" & set "PATH_VAL=%BACKEND_LOCAL_SOURCE%" & goto PATH_ERROR
+if not exist "%BACKEND_LOCAL_DEST%" set "FAILED_PATH=BACKEND LOCALHOST DESTINATION" & set "PATH_VAL=%BACKEND_LOCAL_DEST%" & goto PATH_ERROR
+goto CHECK_ROUTE_DECISION
+
+:VERIFY_LOCALHOST
+echo "%LOCAL_SOURCE%" | findstr /I "G: My-Drive OneDrive Dropbox iCloud CloudSync" >nul && goto SWAP_ERROR
+echo "%BACKEND_LOCAL_SOURCE%" | findstr /I "G: My-Drive OneDrive Dropbox iCloud CloudSync" >nul && goto SWAP_ERROR
+
+if not exist "%LOCAL_SOURCE%" set "FAILED_PATH=FRONTEND LOCALHOST SOURCE" & set "PATH_VAL=%LOCAL_SOURCE%" & goto PATH_ERROR
+if not exist "%LOCAL_DEST%" set "FAILED_PATH=FRONTEND LOCALHOST DESTINATION" & set "PATH_VAL=%LOCAL_DEST%" & goto PATH_ERROR
+if not exist "%BACKEND_LOCAL_SOURCE%" set "FAILED_PATH=BACKEND LOCALHOST SOURCE" & set "PATH_VAL=%BACKEND_LOCAL_SOURCE%" & goto PATH_ERROR
+if not exist "%BACKEND_LOCAL_DEST%" set "FAILED_PATH=BACKEND LOCALHOST DESTINATION" & set "PATH_VAL=%BACKEND_LOCAL_DEST%" & goto PATH_ERROR
+goto CHECK_ROUTE_DECISION
+
+:VERIFY_PROD
+echo "%PROD_SOURCE%" | findstr /I "G: My-Drive OneDrive Dropbox iCloud CloudSync" >nul && goto SWAP_ERROR
+echo "%BACKEND_PROD_SOURCE%" | findstr /I "G: My-Drive OneDrive Dropbox iCloud CloudSync" >nul && goto SWAP_ERROR
+
+if not exist "%PROD_SOURCE%" set "FAILED_PATH=FRONTEND PRODUCTION SOURCE" & set "PATH_VAL=%PROD_SOURCE%" & goto PATH_ERROR
+if not exist "%PROD_DEST%" set "FAILED_PATH=FRONTEND PRODUCTION DESTINATION" & set "PATH_VAL=%PROD_DEST%" & goto PATH_ERROR
+if not exist "%BACKEND_PROD_SOURCE%" set "FAILED_PATH=BACKEND PRODUCTION SOURCE" & set "PATH_VAL=%BACKEND_PROD_SOURCE%" & goto PATH_ERROR
+if not exist "%BACKEND_PROD_DEST%" set "FAILED_PATH=BACKEND PRODUCTION DESTINATION" & set "PATH_VAL=%BACKEND_PROD_DEST%" & goto PATH_ERROR
+goto CHECK_ROUTE_DECISION
+
+:VERIFY_FULLSTACK
+echo "%PROD_SOURCE%" | findstr /I "G: My-Drive OneDrive Dropbox iCloud CloudSync" >nul && goto SWAP_ERROR
+echo "%LOCAL_SOURCE%" | findstr /I "G: My-Drive OneDrive Dropbox iCloud CloudSync" >nul && goto SWAP_ERROR
+echo "%BACKEND_PROD_SOURCE%" | findstr /I "G: My-Drive OneDrive Dropbox iCloud CloudSync" >nul && goto SWAP_ERROR
+echo "%BACKEND_LOCAL_SOURCE%" | findstr /I "G: My-Drive OneDrive Dropbox iCloud CloudSync" >nul && goto SWAP_ERROR
+
+if not exist "%PROD_SOURCE%" set "FAILED_PATH=FRONTEND PRODUCTION SOURCE" & set "PATH_VAL=%PROD_SOURCE%" & goto PATH_ERROR
+if not exist "%PROD_DEST%" set "FAILED_PATH=FRONTEND PRODUCTION DESTINATION" & set "PATH_VAL=%PROD_DEST%" & goto PATH_ERROR
+if not exist "%LOCAL_SOURCE%" set "FAILED_PATH=FRONTEND LOCALHOST SOURCE" & set "PATH_VAL=%LOCAL_SOURCE%" & goto PATH_ERROR
+if not exist "%LOCAL_DEST%" set "FAILED_PATH=FRONTEND LOCALHOST DESTINATION" & set "PATH_VAL=%LOCAL_DEST%" & goto PATH_ERROR
 if not exist "%BACKEND_PROD_SOURCE%" set "FAILED_PATH=BACKEND PRODUCTION SOURCE" & set "PATH_VAL=%BACKEND_PROD_SOURCE%" & goto PATH_ERROR
 if not exist "%BACKEND_PROD_DEST%" set "FAILED_PATH=BACKEND PRODUCTION DESTINATION" & set "PATH_VAL=%BACKEND_PROD_DEST%" & goto PATH_ERROR
 if not exist "%BACKEND_LOCAL_SOURCE%" set "FAILED_PATH=BACKEND LOCALHOST SOURCE" & set "PATH_VAL=%BACKEND_LOCAL_SOURCE%" & goto PATH_ERROR
@@ -350,11 +454,25 @@ if "%SYNC_MODE%"=="SINGLE_ENV" (
     echo   [SRC]  %SINGLE_SOURCE%
     echo   [DEST] %SINGLE_DEST%
 )
-if not "%SYNC_MODE%"=="BACKEND_ONLY" if not "%SYNC_MODE%"=="SINGLE_ENV" (
+if "%SYNC_MODE%"=="FRONTEND_ONLY" (
     echo   [FE-PROD]  %PROD_SOURCE%
     echo   [FE-LOCAL] %LOCAL_SOURCE%
 )
-if not "%SYNC_MODE%"=="FRONTEND_ONLY" if not "%SYNC_MODE%"=="SINGLE_ENV" (
+if "%SYNC_MODE%"=="BACKEND_ONLY" (
+    echo   [BE-PROD]  %BACKEND_PROD_SOURCE%
+    echo   [BE-LOCAL] %BACKEND_LOCAL_SOURCE%
+)
+if "%SYNC_MODE%"=="LOCALHOST_ONLY" (
+    echo   [FE-LOCAL] %LOCAL_SOURCE%
+    echo   [BE-LOCAL] %BACKEND_LOCAL_SOURCE%
+)
+if "%SYNC_MODE%"=="PROD_ONLY" (
+    echo   [FE-PROD]  %PROD_SOURCE%
+    echo   [BE-PROD]  %BACKEND_PROD_SOURCE%
+)
+if "%SYNC_MODE%"=="FULL_STACK" (
+    echo   [FE-PROD]  %PROD_SOURCE%
+    echo   [FE-LOCAL] %LOCAL_SOURCE%
     echo   [BE-PROD]  %BACKEND_PROD_SOURCE%
     echo   [BE-LOCAL] %BACKEND_LOCAL_SOURCE%
 )
@@ -380,7 +498,17 @@ echo  RUNNING SIMULATION MODE... (No files will be modified)
 echo ============================================================
 echo.
 if "%SYNC_MODE%"=="SINGLE_ENV" goto SIM_SINGLE
+if "%SYNC_MODE%"=="FRONTEND_ONLY" goto SIM_FRONTEND
 if "%SYNC_MODE%"=="BACKEND_ONLY" goto SIM_BACKEND
+if "%SYNC_MODE%"=="LOCALHOST_ONLY" goto SIM_LOCALHOST
+if "%SYNC_MODE%"=="PROD_ONLY" goto SIM_PROD
+if "%SYNC_MODE%"=="FULL_STACK" goto SIM_FULLSTACK
+
+:SIM_SINGLE
+echo --- Simulating SINGLE ENVIRONMENT PIPELINE... ---
+robocopy "%SINGLE_SOURCE%" "%SINGLE_DEST%" /L /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /R:2 /W:5 /XD node_modules dist .git build .gradle .idea .cxx
+echo.
+goto SIM_DONE
 
 :SIM_FRONTEND
 echo --- Simulating FRONTEND PRODUCTION... ---
@@ -389,7 +517,7 @@ echo.
 echo --- Simulating FRONTEND LOCALHOST... ---
 robocopy "%LOCAL_SOURCE%" "%LOCAL_DEST%" /L /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /R:2 /W:5 /XD node_modules dist .git build .gradle .idea .cxx
 echo.
-if "%SYNC_MODE%"=="FRONTEND_ONLY" goto SIM_DONE
+goto SIM_DONE
 
 :SIM_BACKEND
 echo --- Simulating BACKEND PRODUCTION... ---
@@ -400,10 +528,39 @@ robocopy "%BACKEND_LOCAL_SOURCE%" "%BACKEND_LOCAL_DEST%" /L /S /E /DCOPY:DA /COP
 echo.
 goto SIM_DONE
 
-:SIM_SINGLE
-echo --- Simulating SINGLE ENVIRONMENT PIPELINE... ---
-robocopy "%SINGLE_SOURCE%" "%SINGLE_DEST%" /L /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /R:2 /W:5 /XD node_modules dist .git build .gradle .idea .cxx
+:SIM_LOCALHOST
+echo --- Simulating FRONTEND LOCALHOST... ---
+robocopy "%LOCAL_SOURCE%" "%LOCAL_DEST%" /L /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /R:2 /W:5 /XD node_modules dist .git build .gradle .idea .cxx
 echo.
+echo --- Simulating BACKEND LOCALHOST... ---
+robocopy "%BACKEND_LOCAL_SOURCE%" "%BACKEND_LOCAL_DEST%" /L /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /R:2 /W:5 /XD node_modules dist .git build .gradle .idea .cxx
+echo.
+goto SIM_DONE
+
+:SIM_PROD
+echo --- Simulating FRONTEND PRODUCTION... ---
+robocopy "%PROD_SOURCE%" "%PROD_DEST%" /L /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /R:2 /W:5 /XD node_modules dist .git build .gradle .idea .cxx
+echo.
+echo --- Simulating BACKEND PRODUCTION... ---
+robocopy "%BACKEND_PROD_SOURCE%" "%BACKEND_PROD_DEST%" /L /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /R:2 /W:5 /XD node_modules dist .git build .gradle .idea .cxx
+echo.
+goto SIM_DONE
+
+:SIM_FULLSTACK
+echo --- Simulating FRONTEND PRODUCTION... ---
+robocopy "%PROD_SOURCE%" "%PROD_DEST%" /L /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /R:2 /W:5 /XD node_modules dist .git build .gradle .idea .cxx
+echo.
+echo --- Simulating FRONTEND LOCALHOST... ---
+robocopy "%LOCAL_SOURCE%" "%LOCAL_DEST%" /L /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /R:2 /W:5 /XD node_modules dist .git build .gradle .idea .cxx
+echo.
+echo --- Simulating BACKEND PRODUCTION... ---
+robocopy "%BACKEND_PROD_SOURCE%" "%BACKEND_PROD_DEST%" /L /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /R:2 /W:5 /XD node_modules dist .git build .gradle .idea .cxx
+echo.
+echo --- Simulating BACKEND LOCALHOST... ---
+robocopy "%BACKEND_LOCAL_SOURCE%" "%BACKEND_LOCAL_DEST%" /L /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /R:2 /W:5 /XD node_modules dist .git build .gradle .idea .cxx
+echo.
+goto SIM_DONE
+
 :SIM_DONE
 echo ============================================================
 echo  Simulation finished! No changes were made to your cloud.
@@ -418,7 +575,17 @@ echo  WARNING: RUNNING LIVE BACKUP MODE...
 echo ============================================================
 echo.
 if "%SYNC_MODE%"=="SINGLE_ENV" goto LIVE_SINGLE
+if "%SYNC_MODE%"=="FRONTEND_ONLY" goto LIVE_FRONTEND
 if "%SYNC_MODE%"=="BACKEND_ONLY" goto LIVE_BACKEND
+if "%SYNC_MODE%"=="LOCALHOST_ONLY" goto LIVE_LOCALHOST
+if "%SYNC_MODE%"=="PROD_ONLY" goto LIVE_PROD
+if "%SYNC_MODE%"=="FULL_STACK" goto LIVE_FULLSTACK
+
+:LIVE_SINGLE
+echo --- Syncing SINGLE PIPELINE to Backup Destination... ---
+robocopy "%SINGLE_SOURCE%" "%SINGLE_DEST%" /MIR /XD node_modules dist .git build .gradle .idea .cxx /R:2 /W:5
+echo.
+goto LIVE_DONE
 
 :LIVE_FRONTEND
 echo --- Syncing FRONTEND PRODUCTION to Backup Destination... ---
@@ -427,7 +594,7 @@ echo.
 echo --- Syncing FRONTEND LOCALHOST to Backup Destination... ---
 robocopy "%LOCAL_SOURCE%" "%LOCAL_DEST%" /MIR /XD node_modules dist .git build .gradle .idea .cxx /R:2 /W:5
 echo.
-if "%SYNC_MODE%"=="FRONTEND_ONLY" goto LIVE_DONE
+goto LIVE_DONE
 
 :LIVE_BACKEND
 echo --- Syncing BACKEND PRODUCTION to Backup Destination... ---
@@ -438,10 +605,39 @@ robocopy "%BACKEND_LOCAL_SOURCE%" "%BACKEND_LOCAL_DEST%" /MIR /XD node_modules d
 echo.
 goto LIVE_DONE
 
-:LIVE_SINGLE
-echo --- Syncing SINGLE PIPELINE to Backup Destination... ---
-robocopy "%SINGLE_SOURCE%" "%SINGLE_DEST%" /MIR /XD node_modules dist .git build .gradle .idea .cxx /R:2 /W:5
+:LIVE_LOCALHOST
+echo --- Syncing FRONTEND LOCALHOST to Backup Destination... ---
+robocopy "%LOCAL_SOURCE%" "%LOCAL_DEST%" /MIR /XD node_modules dist .git build .gradle .idea .cxx /R:2 /W:5
 echo.
+echo --- Syncing BACKEND LOCALHOST to Backup Destination... ---
+robocopy "%BACKEND_LOCAL_SOURCE%" "%BACKEND_LOCAL_DEST%" /MIR /XD node_modules dist .git build .gradle .idea .cxx /R:2 /W:5
+echo.
+goto LIVE_DONE
+
+:LIVE_PROD
+echo --- Syncing FRONTEND PRODUCTION to Backup Destination... ---
+robocopy "%PROD_SOURCE%" "%PROD_DEST%" /MIR /XD node_modules dist .git build .gradle .idea .cxx /R:2 /W:5
+echo.
+echo --- Syncing BACKEND PRODUCTION to Backup Destination... ---
+robocopy "%BACKEND_PROD_SOURCE%" "%BACKEND_PROD_DEST%" /MIR /XD node_modules dist .git build .gradle .idea .cxx /R:2 /W:5
+echo.
+goto LIVE_DONE
+
+:LIVE_FULLSTACK
+echo --- Syncing FRONTEND PRODUCTION to Backup Destination... ---
+robocopy "%PROD_SOURCE%" "%PROD_DEST%" /MIR /XD node_modules dist .git build .gradle .idea .cxx /R:2 /W:5
+echo.
+echo --- Syncing FRONTEND LOCALHOST to Backup Destination... ---
+robocopy "%LOCAL_SOURCE%" "%LOCAL_DEST%" /MIR /XD node_modules dist .git build .gradle .idea .cxx /R:2 /W:5
+echo.
+echo --- Syncing BACKEND PRODUCTION to Backup Destination... ---
+robocopy "%BACKEND_PROD_SOURCE%" "%BACKEND_PROD_DEST%" /MIR /XD node_modules dist .git build .gradle .idea .cxx /R:2 /W:5
+echo.
+echo --- Syncing BACKEND LOCALHOST to Backup Destination... ---
+robocopy "%BACKEND_LOCAL_SOURCE%" "%BACKEND_LOCAL_DEST%" /MIR /XD node_modules dist .git build .gradle .idea .cxx /R:2 /W:5
+echo.
+goto LIVE_DONE
+
 :LIVE_DONE
 echo ============================================================
 echo  Live backup completed successfully!
