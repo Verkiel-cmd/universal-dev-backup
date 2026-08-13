@@ -158,20 +158,14 @@ if errorlevel 1 (
 )
 
 if exist "%~dp0saved_paths.tmp" del /f /q "%~dp0saved_paths.tmp" >nul 2>&1
-for /f "usebackq tokens=1* delims=" %%A in ("%~dp0saved_paths.txt") do (
-    echo %%A ^| findstr /B /C:"PROFILE:%DEL_TARGET%" >nul
-    if errorlevel 1 (
-        echo %%A ^| findstr /B /C:"%DEL_TARGET%." >nul
-        if errorlevel 1 (
-            echo %%A>>"%~dp0saved_paths.tmp"
-        )
-    )
-)
+
+:: Filter out ONLY the targeted profile name and its variables
+findstr /V /B /C:"PROFILE:%DEL_TARGET%" /C:"%DEL_TARGET%." "%~dp0saved_paths.txt" > "%~dp0saved_paths.tmp"
+
 if exist "%~dp0saved_paths.tmp" (
     move /y "%~dp0saved_paths.tmp" "%~dp0saved_paths.txt" >nul
-) else (
-    if exist "%~dp0saved_paths.txt" del /f /q "%~dp0saved_paths.txt" >nul 2>&1
 )
+
 echo.
 echo  [-] Profile "%DEL_TARGET%" has been scrubbed from records.
 pause
@@ -202,15 +196,7 @@ if "%NEW_PROF_NAME%"=="" goto SAVE_PROFILE_PROMPT
 :: Overwrite existing entry if name matches
 if exist "%~dp0saved_paths.txt" (
     if exist "%~dp0saved_paths.tmp" del /f /q "%~dp0saved_paths.tmp" >nul 2>&1
-    for /f "usebackq tokens=1* delims=" %%A in ("%~dp0saved_paths.txt") do (
-        echo %%A ^| findstr /B /C:"PROFILE:%NEW_PROF_NAME%" >nul
-        if errorlevel 1 (
-            echo %%A ^| findstr /B /C:"%NEW_PROF_NAME%." >nul
-            if errorlevel 1 (
-                echo %%A>>"%~dp0saved_paths.tmp"
-            )
-        )
-    )
+    findstr /V /B /C:"PROFILE:%NEW_PROF_NAME%" /C:"%NEW_PROF_NAME%." "%~dp0saved_paths.txt" > "%~dp0saved_paths.tmp"
     if exist "%~dp0saved_paths.tmp" (
         move /y "%~dp0saved_paths.tmp" "%~dp0saved_paths.txt" >nul
     )
