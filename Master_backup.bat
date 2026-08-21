@@ -245,6 +245,12 @@ if "%SYNC_MODE%"=="FULL_STACK" (
     echo %NEW_PROF_NAME%.BACKEND_LOCAL_SOURCE=%BACKEND_LOCAL_SOURCE%>>"%~dp0saved_paths.txt"
     echo %NEW_PROF_NAME%.BACKEND_LOCAL_DEST=%BACKEND_LOCAL_DEST%>>"%~dp0saved_paths.txt"
 )
+if "%SYNC_MODE%"=="FULLSTACK_4PATH" (
+    echo %NEW_PROF_NAME%.PROD_SOURCE=%PROD_SOURCE%>>"%~dp0saved_paths.txt"
+    echo %NEW_PROF_NAME%.PROD_DEST=%PROD_DEST%>>"%~dp0saved_paths.txt"
+    echo %NEW_PROF_NAME%.LOCAL_SOURCE=%LOCAL_SOURCE%>>"%~dp0saved_paths.txt"
+    echo %NEW_PROF_NAME%.LOCAL_DEST=%LOCAL_DEST%>>"%~dp0saved_paths.txt"
+)
 echo.>>"%~dp0saved_paths.txt"
 
 echo  [+] Profile "%NEW_PROF_NAME%" compiled and written successfully!
@@ -264,9 +270,10 @@ echo   [3] Backend Architecture Only   (4 Folders - BE Local + BE Prod)
 echo   [4] All Localhost Environments  (4 Folders - FE Local + BE Local)
 echo   [5] All Production Environments (4 Folders - FE Prod + BE Prod)
 echo   [6] Full-Stack Combo Ecosystem  (8 Folders - All Profiles)
+echo   [7] Full-Stack Unified (4 Folders - Local FS + Prod FS)
 echo ============================================================
 echo.
-set /p sync_scope="Enter choice (1, 2, 3, 4, 5, or 6): "
+set /p sync_scope="Enter choice (1, 2, 3, 4, 5, 6, or 7): "
 
 if "%sync_scope%"=="1" set "SYNC_MODE=SINGLE_ENV" & goto CUSTOM_INPUT
 if "%sync_scope%"=="2" set "SYNC_MODE=FRONTEND_ONLY" & goto CUSTOM_INPUT
@@ -274,6 +281,7 @@ if "%sync_scope%"=="3" set "SYNC_MODE=BACKEND_ONLY" & goto CUSTOM_INPUT
 if "%sync_scope%"=="4" set "SYNC_MODE=LOCALHOST_ONLY" & goto CUSTOM_INPUT
 if "%sync_scope%"=="5" set "SYNC_MODE=PROD_ONLY" & goto CUSTOM_INPUT
 if "%sync_scope%"=="6" set "SYNC_MODE=FULL_STACK" & goto CUSTOM_INPUT
+if "%sync_scope%"=="7" set "SYNC_MODE=FULLSTACK_4PATH" & goto CUSTOM_INPUT
 goto CUSTOM_WIZARD
 
 :CUSTOM_INPUT
@@ -289,6 +297,7 @@ if "%SYNC_MODE%"=="BACKEND_ONLY" goto INPUT_BACKEND
 if "%SYNC_MODE%"=="LOCALHOST_ONLY" goto INPUT_LOCALHOST
 if "%SYNC_MODE%"=="PROD_ONLY" goto INPUT_PROD
 if "%SYNC_MODE%"=="FULL_STACK" goto INPUT_FULLSTACK
+if "%SYNC_MODE%"=="FULLSTACK_4PATH" goto INPUT_FULLSTACK_4PATH
 
 :INPUT_FRONTEND
 echo.
@@ -341,6 +350,15 @@ set /p BACKEND_LOCAL_SOURCE="Enter BACKEND LOCALHOST Source Path: "
 set /p BACKEND_LOCAL_DEST="Enter BACKEND LOCALHOST Destination Path: "
 goto VERIFY_PATHS
 
+:INPUT_FULLSTACK_4PATH
+echo.
+echo --- [FULL-STACK UNIFIED CHANNELS REGISTRATION (4 PATHS)] ---
+set /p PROD_SOURCE="Enter FULL-STACK PRODUCTION Source Path: "
+set /p PROD_DEST="Enter FULL-STACK PRODUCTION Destination Path: "
+set /p LOCAL_SOURCE="Enter FULL-STACK LOCALHOST Source Path: "
+set /p LOCAL_DEST="Enter FULL-STACK LOCALHOST Destination Path: "
+goto VERIFY_PATHS
+
 :INPUT_SINGLE
 echo.
 echo --- [SINGLE ENVIRONMENT REGISTRATION] ---
@@ -358,6 +376,7 @@ if "%SYNC_MODE%"=="BACKEND_ONLY" goto VERIFY_BACKEND
 if "%SYNC_MODE%"=="LOCALHOST_ONLY" goto VERIFY_LOCALHOST
 if "%SYNC_MODE%"=="PROD_ONLY" goto VERIFY_PROD
 if "%SYNC_MODE%"=="FULL_STACK" goto VERIFY_FULLSTACK
+if "%SYNC_MODE%"=="FULLSTACK_4PATH" goto VERIFY_FULLSTACK_4PATH
 
 :VERIFY_FRONTEND
 echo "%PROD_SOURCE%" | findstr /I "G: My-Drive OneDrive Dropbox iCloud CloudSync" >nul && goto SWAP_ERROR
@@ -415,6 +434,16 @@ if not exist "%BACKEND_LOCAL_SOURCE%" set "FAILED_PATH=BACKEND LOCALHOST SOURCE"
 if not exist "%BACKEND_LOCAL_DEST%" set "FAILED_PATH=BACKEND LOCALHOST DESTINATION" & set "PATH_VAL=%BACKEND_LOCAL_DEST%" & goto PATH_ERROR
 goto CHECK_ROUTE_DECISION
 
+:VERIFY_FULLSTACK_4PATH
+echo "%PROD_SOURCE%" | findstr /I "G: My-Drive OneDrive Dropbox iCloud CloudSync" >nul && goto SWAP_ERROR
+echo "%LOCAL_SOURCE%" | findstr /I "G: My-Drive OneDrive Dropbox iCloud CloudSync" >nul && goto SWAP_ERROR
+
+if not exist "%PROD_SOURCE%" set "FAILED_PATH=FULL-STACK PRODUCTION SOURCE" & set "PATH_VAL=%PROD_SOURCE%" & goto PATH_ERROR
+if not exist "%PROD_DEST%" set "FAILED_PATH=FULL-STACK PRODUCTION DESTINATION" & set "PATH_VAL=%PROD_DEST%" & goto PATH_ERROR
+if not exist "%LOCAL_SOURCE%" set "FAILED_PATH=FULL-STACK LOCALHOST SOURCE" & set "PATH_VAL=%LOCAL_SOURCE%" & goto PATH_ERROR
+if not exist "%LOCAL_DEST%" set "FAILED_PATH=FULL-STACK LOCALHOST DESTINATION" & set "PATH_VAL=%LOCAL_DEST%" & goto PATH_ERROR
+goto CHECK_ROUTE_DECISION
+
 :VERIFY_SINGLE
 echo "%SINGLE_SOURCE%" | findstr /I "G: My-Drive OneDrive Dropbox iCloud CloudSync" >nul && goto SWAP_ERROR
 
@@ -462,6 +491,10 @@ if "%SYNC_MODE%"=="FULL_STACK" (
     echo   [BE-PROD]  %BACKEND_PROD_SOURCE%
     echo   [BE-LOCAL] %BACKEND_LOCAL_SOURCE%
 )
+if "%SYNC_MODE%"=="FULLSTACK_4PATH" (
+    echo    [FS-PROD]  %PROD_SOURCE%
+    echo    [FS-LOCAL] %LOCAL_SOURCE%
+)
 echo ============================================================
 echo   [1] RUN SAFE SIMULATION (Check changes without overwriting)
 echo   [2] RUN LIVE BACKUP     (Mirror actual project directories)
@@ -489,6 +522,7 @@ if "%SYNC_MODE%"=="BACKEND_ONLY" goto SIM_BACKEND
 if "%SYNC_MODE%"=="LOCALHOST_ONLY" goto SIM_LOCALHOST
 if "%SYNC_MODE%"=="PROD_ONLY" goto SIM_PROD
 if "%SYNC_MODE%"=="FULL_STACK" goto SIM_FULLSTACK
+if "%SYNC_MODE%"=="FULLSTACK_4PATH" goto SIM_FULLSTACK_4PATH
 
 :SIM_SINGLE
 echo --- Simulating SINGLE ENVIRONMENT PIPELINE... ---
@@ -547,6 +581,15 @@ robocopy "%BACKEND_LOCAL_SOURCE%" "%BACKEND_LOCAL_DEST%" /L /S /E /DCOPY:DA /COP
 echo.
 goto SIM_DONE
 
+:SIM_FULLSTACK_4PATH
+echo --- Simulating FULL-STACK PRODUCTION... ---
+robocopy "%PROD_SOURCE%" "%PROD_DEST%" /L /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /R:2 /W:5 /XD node_modules dist .git build .gradle .idea .cxx
+echo.
+echo --- Simulating FULL-STACK LOCALHOST... ---
+robocopy "%LOCAL_SOURCE%" "%LOCAL_DEST%" /L /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /R:2 /W:5 /XD node_modules dist .git build .gradle .idea .cxx
+echo.
+goto SIM_DONE
+
 :SIM_DONE
 echo ============================================================
 echo  Simulation finished! No changes were made to your cloud.
@@ -566,6 +609,7 @@ if "%SYNC_MODE%"=="BACKEND_ONLY" goto LIVE_BACKEND
 if "%SYNC_MODE%"=="LOCALHOST_ONLY" goto LIVE_LOCALHOST
 if "%SYNC_MODE%"=="PROD_ONLY" goto LIVE_PROD
 if "%SYNC_MODE%"=="FULL_STACK" goto LIVE_FULLSTACK
+if "%SYNC_MODE%"=="FULLSTACK_4PATH" goto LIVE_FULLSTACK_4PATH
 
 :LIVE_SINGLE
 echo --- Syncing SINGLE PIPELINE to Backup Destination... ---
@@ -621,6 +665,15 @@ robocopy "%BACKEND_PROD_SOURCE%" "%BACKEND_PROD_DEST%" /MIR /XD node_modules dis
 echo.
 echo --- Syncing BACKEND LOCALHOST to Backup Destination... ---
 robocopy "%BACKEND_LOCAL_SOURCE%" "%BACKEND_LOCAL_DEST%" /MIR /XD node_modules dist .git build .gradle .idea .cxx /R:2 /W:5
+echo.
+goto LIVE_DONE
+
+:LIVE_FULLSTACK_4PATH
+echo --- Syncing FULL-STACK PRODUCTION to Backup Destination... ---
+robocopy "%PROD_SOURCE%" "%PROD_DEST%" /MIR /XD node_modules dist .git build .gradle .idea .cxx /R:2 /W:5
+echo.
+echo --- Syncing FULL-STACK LOCALHOST to Backup Destination... ---
+robocopy "%LOCAL_SOURCE%" "%LOCAL_DEST%" /MIR /XD node_modules dist .git build .gradle .idea .cxx /R:2 /W:5
 echo.
 goto LIVE_DONE
 
