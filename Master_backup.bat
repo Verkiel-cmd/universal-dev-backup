@@ -379,9 +379,17 @@ if "%SYNC_MODE%"=="FULL_STACK" goto VERIFY_FULLSTACK
 if "%SYNC_MODE%"=="FULLSTACK_4PATH" goto VERIFY_FULLSTACK_4PATH
 
 :VERIFY_FRONTEND
+:: Step 1: Check if any path variable is completely empty
+if "%PROD_SOURCE%"=="" set "FAILED_PATH=FRONTEND PRODUCTION SOURCE" & set "PATH_VAL=[EMPTY]" & goto PATH_ERROR
+if "%PROD_DEST%"=="" set "FAILED_PATH=FRONTEND PRODUCTION DESTINATION" & set "PATH_VAL=[EMPTY]" & goto PATH_ERROR
+if "%LOCAL_SOURCE%"=="" set "FAILED_PATH=FRONTEND LOCALHOST SOURCE" & set "PATH_VAL=[EMPTY]" & goto PATH_ERROR
+if "%LOCAL_DEST%"=="" set "FAILED_PATH=FRONTEND LOCALHOST DESTINATION" & set "PATH_VAL=[EMPTY]" & goto PATH_ERROR
+
+:: Step 2: Swap / cloud sync path checks
 echo "%PROD_SOURCE%" | findstr /I "G: My-Drive OneDrive Dropbox iCloud CloudSync" >nul && goto SWAP_ERROR
 echo "%LOCAL_SOURCE%" | findstr /I "G: My-Drive OneDrive Dropbox iCloud CloudSync" >nul && goto SWAP_ERROR
 
+:: Step 3: Check if paths physically exist on disk
 if not exist "%PROD_SOURCE%" set "FAILED_PATH=FRONTEND PRODUCTION SOURCE" & set "PATH_VAL=%PROD_SOURCE%" & goto PATH_ERROR
 if not exist "%PROD_DEST%" set "FAILED_PATH=FRONTEND PRODUCTION DESTINATION" & set "PATH_VAL=%PROD_DEST%" & goto PATH_ERROR
 if not exist "%LOCAL_SOURCE%" set "FAILED_PATH=FRONTEND LOCALHOST SOURCE" & set "PATH_VAL=%LOCAL_SOURCE%" & goto PATH_ERROR
