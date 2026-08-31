@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 >nul
 cls
 title Universal Project Backup Utility - Strict Guardrail System
 REM ============================================================
@@ -104,8 +105,8 @@ set "BACKEND_PROD_DEST="
 set "BACKEND_LOCAL_SOURCE="
 set "BACKEND_LOCAL_DEST="
 
-:: Leak-free variable loader (No setlocal stack overflow)
-for /f "usebackq tokens=1* delims==" %%A in (`findstr /R "^%LOAD_TARGET%\." "%~dp0saved_paths.txt"`) do (
+:: Leak-free variable loader with literal matching for special characters
+for /f "usebackq tokens=1* delims==" %%A in (`findstr /B /C:"%LOAD_TARGET%." "%~dp0saved_paths.txt"`) do (
     for /f "tokens=2 delims=." %%K in ("%%A") do (
         set "%%K=%%B"
     )
@@ -370,6 +371,18 @@ goto VERIFY_PATHS
 cls
 echo Verification: Checking if chosen targets are valid...
 
+:: Normalize paths first - strips trailing slashes, hidden quotes, and trailing spaces
+call :CLEAN_PATH PROD_SOURCE
+call :CLEAN_PATH PROD_DEST
+call :CLEAN_PATH LOCAL_SOURCE
+call :CLEAN_PATH LOCAL_DEST
+call :CLEAN_PATH BACKEND_PROD_SOURCE
+call :CLEAN_PATH BACKEND_PROD_DEST
+call :CLEAN_PATH BACKEND_LOCAL_SOURCE
+call :CLEAN_PATH BACKEND_LOCAL_DEST
+call :CLEAN_PATH SINGLE_SOURCE
+call :CLEAN_PATH SINGLE_DEST
+
 if "%SYNC_MODE%"=="SINGLE_ENV" goto VERIFY_SINGLE
 if "%SYNC_MODE%"=="FRONTEND_ONLY" goto VERIFY_FRONTEND
 if "%SYNC_MODE%"=="BACKEND_ONLY" goto VERIFY_BACKEND
@@ -379,17 +392,14 @@ if "%SYNC_MODE%"=="FULL_STACK" goto VERIFY_FULLSTACK
 if "%SYNC_MODE%"=="FULLSTACK_4PATH" goto VERIFY_FULLSTACK_4PATH
 
 :VERIFY_FRONTEND
-:: Step 1: Check if any path variable is completely empty
 if "%PROD_SOURCE%"=="" set "FAILED_PATH=FRONTEND PRODUCTION SOURCE" & set "PATH_VAL=[EMPTY]" & goto PATH_ERROR
 if "%PROD_DEST%"=="" set "FAILED_PATH=FRONTEND PRODUCTION DESTINATION" & set "PATH_VAL=[EMPTY]" & goto PATH_ERROR
 if "%LOCAL_SOURCE%"=="" set "FAILED_PATH=FRONTEND LOCALHOST SOURCE" & set "PATH_VAL=[EMPTY]" & goto PATH_ERROR
 if "%LOCAL_DEST%"=="" set "FAILED_PATH=FRONTEND LOCALHOST DESTINATION" & set "PATH_VAL=[EMPTY]" & goto PATH_ERROR
 
-:: Step 2: Swap / cloud sync path checks
-echo "%PROD_SOURCE%" | findstr /I "G: My-Drive OneDrive Dropbox iCloud CloudSync" >nul && goto SWAP_ERROR
-echo "%LOCAL_SOURCE%" | findstr /I "G: My-Drive OneDrive Dropbox iCloud CloudSync" >nul && goto SWAP_ERROR
+call :CHECK_SWAP "%PROD_SOURCE%" || goto SWAP_ERROR
+call :CHECK_SWAP "%LOCAL_SOURCE%" || goto SWAP_ERROR
 
-:: Step 3: Check if paths physically exist on disk
 if not exist "%PROD_SOURCE%" set "FAILED_PATH=FRONTEND PRODUCTION SOURCE" & set "PATH_VAL=%PROD_SOURCE%" & goto PATH_ERROR
 if not exist "%PROD_DEST%" set "FAILED_PATH=FRONTEND PRODUCTION DESTINATION" & set "PATH_VAL=%PROD_DEST%" & goto PATH_ERROR
 if not exist "%LOCAL_SOURCE%" set "FAILED_PATH=FRONTEND LOCALHOST SOURCE" & set "PATH_VAL=%LOCAL_SOURCE%" & goto PATH_ERROR
@@ -397,8 +407,13 @@ if not exist "%LOCAL_DEST%" set "FAILED_PATH=FRONTEND LOCALHOST DESTINATION" & s
 goto CHECK_ROUTE_DECISION
 
 :VERIFY_BACKEND
-echo "%BACKEND_PROD_SOURCE%" | findstr /I "G: My-Drive OneDrive Dropbox iCloud CloudSync" >nul && goto SWAP_ERROR
-echo "%BACKEND_LOCAL_SOURCE%" | findstr /I "G: My-Drive OneDrive Dropbox iCloud CloudSync" >nul && goto SWAP_ERROR
+if "%BACKEND_PROD_SOURCE%"=="" set "FAILED_PATH=BACKEND PRODUCTION SOURCE" & set "PATH_VAL=[EMPTY]" & goto PATH_ERROR
+if "%BACKEND_PROD_DEST%"=="" set "FAILED_PATH=BACKEND PRODUCTION DESTINATION" & set "PATH_VAL=[EMPTY]" & goto PATH_ERROR
+if "%BACKEND_LOCAL_SOURCE%"=="" set "FAILED_PATH=BACKEND LOCALHOST SOURCE" & set "PATH_VAL=[EMPTY]" & goto PATH_ERROR
+if "%BACKEND_LOCAL_DEST%"=="" set "FAILED_PATH=BACKEND LOCALHOST DESTINATION" & set "PATH_VAL=[EMPTY]" & goto PATH_ERROR
+
+call :CHECK_SWAP "%BACKEND_PROD_SOURCE%" || goto SWAP_ERROR
+call :CHECK_SWAP "%BACKEND_LOCAL_SOURCE%" || goto SWAP_ERROR
 
 if not exist "%BACKEND_PROD_SOURCE%" set "FAILED_PATH=BACKEND PRODUCTION SOURCE" & set "PATH_VAL=%BACKEND_PROD_SOURCE%" & goto PATH_ERROR
 if not exist "%BACKEND_PROD_DEST%" set "FAILED_PATH=BACKEND PRODUCTION DESTINATION" & set "PATH_VAL=%BACKEND_PROD_DEST%" & goto PATH_ERROR
@@ -407,8 +422,13 @@ if not exist "%BACKEND_LOCAL_DEST%" set "FAILED_PATH=BACKEND LOCALHOST DESTINATI
 goto CHECK_ROUTE_DECISION
 
 :VERIFY_LOCALHOST
-echo "%LOCAL_SOURCE%" | findstr /I "G: My-Drive OneDrive Dropbox iCloud CloudSync" >nul && goto SWAP_ERROR
-echo "%BACKEND_LOCAL_SOURCE%" | findstr /I "G: My-Drive OneDrive Dropbox iCloud CloudSync" >nul && goto SWAP_ERROR
+if "%LOCAL_SOURCE%"=="" set "FAILED_PATH=FRONTEND LOCALHOST SOURCE" & set "PATH_VAL=[EMPTY]" & goto PATH_ERROR
+if "%LOCAL_DEST%"=="" set "FAILED_PATH=FRONTEND LOCALHOST DESTINATION" & set "PATH_VAL=[EMPTY]" & goto PATH_ERROR
+if "%BACKEND_LOCAL_SOURCE%"=="" set "FAILED_PATH=BACKEND LOCALHOST SOURCE" & set "PATH_VAL=[EMPTY]" & goto PATH_ERROR
+if "%BACKEND_LOCAL_DEST%"=="" set "FAILED_PATH=BACKEND LOCALHOST DESTINATION" & set "PATH_VAL=[EMPTY]" & goto PATH_ERROR
+
+call :CHECK_SWAP "%LOCAL_SOURCE%" || goto SWAP_ERROR
+call :CHECK_SWAP "%BACKEND_LOCAL_SOURCE%" || goto SWAP_ERROR
 
 if not exist "%LOCAL_SOURCE%" set "FAILED_PATH=FRONTEND LOCALHOST SOURCE" & set "PATH_VAL=%LOCAL_SOURCE%" & goto PATH_ERROR
 if not exist "%LOCAL_DEST%" set "FAILED_PATH=FRONTEND LOCALHOST DESTINATION" & set "PATH_VAL=%LOCAL_DEST%" & goto PATH_ERROR
@@ -417,8 +437,13 @@ if not exist "%BACKEND_LOCAL_DEST%" set "FAILED_PATH=BACKEND LOCALHOST DESTINATI
 goto CHECK_ROUTE_DECISION
 
 :VERIFY_PROD
-echo "%PROD_SOURCE%" | findstr /I "G: My-Drive OneDrive Dropbox iCloud CloudSync" >nul && goto SWAP_ERROR
-echo "%BACKEND_PROD_SOURCE%" | findstr /I "G: My-Drive OneDrive Dropbox iCloud CloudSync" >nul && goto SWAP_ERROR
+if "%PROD_SOURCE%"=="" set "FAILED_PATH=FRONTEND PRODUCTION SOURCE" & set "PATH_VAL=[EMPTY]" & goto PATH_ERROR
+if "%PROD_DEST%"=="" set "FAILED_PATH=FRONTEND PRODUCTION DESTINATION" & set "PATH_VAL=[EMPTY]" & goto PATH_ERROR
+if "%BACKEND_PROD_SOURCE%"=="" set "FAILED_PATH=BACKEND PRODUCTION SOURCE" & set "PATH_VAL=[EMPTY]" & goto PATH_ERROR
+if "%BACKEND_PROD_DEST%"=="" set "FAILED_PATH=BACKEND PRODUCTION DESTINATION" & set "PATH_VAL=[EMPTY]" & goto PATH_ERROR
+
+call :CHECK_SWAP "%PROD_SOURCE%" || goto SWAP_ERROR
+call :CHECK_SWAP "%BACKEND_PROD_SOURCE%" || goto SWAP_ERROR
 
 if not exist "%PROD_SOURCE%" set "FAILED_PATH=FRONTEND PRODUCTION SOURCE" & set "PATH_VAL=%PROD_SOURCE%" & goto PATH_ERROR
 if not exist "%PROD_DEST%" set "FAILED_PATH=FRONTEND PRODUCTION DESTINATION" & set "PATH_VAL=%PROD_DEST%" & goto PATH_ERROR
@@ -427,10 +452,19 @@ if not exist "%BACKEND_PROD_DEST%" set "FAILED_PATH=BACKEND PRODUCTION DESTINATI
 goto CHECK_ROUTE_DECISION
 
 :VERIFY_FULLSTACK
-echo "%PROD_SOURCE%" | findstr /I "G: My-Drive OneDrive Dropbox iCloud CloudSync" >nul && goto SWAP_ERROR
-echo "%LOCAL_SOURCE%" | findstr /I "G: My-Drive OneDrive Dropbox iCloud CloudSync" >nul && goto SWAP_ERROR
-echo "%BACKEND_PROD_SOURCE%" | findstr /I "G: My-Drive OneDrive Dropbox iCloud CloudSync" >nul && goto SWAP_ERROR
-echo "%BACKEND_LOCAL_SOURCE%" | findstr /I "G: My-Drive OneDrive Dropbox iCloud CloudSync" >nul && goto SWAP_ERROR
+if "%PROD_SOURCE%"=="" set "FAILED_PATH=FRONTEND PRODUCTION SOURCE" & set "PATH_VAL=[EMPTY]" & goto PATH_ERROR
+if "%PROD_DEST%"=="" set "FAILED_PATH=FRONTEND PRODUCTION DESTINATION" & set "PATH_VAL=[EMPTY]" & goto PATH_ERROR
+if "%LOCAL_SOURCE%"=="" set "FAILED_PATH=FRONTEND LOCALHOST SOURCE" & set "PATH_VAL=[EMPTY]" & goto PATH_ERROR
+if "%LOCAL_DEST%"=="" set "FAILED_PATH=FRONTEND LOCALHOST DESTINATION" & set "PATH_VAL=[EMPTY]" & goto PATH_ERROR
+if "%BACKEND_PROD_SOURCE%"=="" set "FAILED_PATH=BACKEND PRODUCTION SOURCE" & set "PATH_VAL=[EMPTY]" & goto PATH_ERROR
+if "%BACKEND_PROD_DEST%"=="" set "FAILED_PATH=BACKEND PRODUCTION DESTINATION" & set "PATH_VAL=[EMPTY]" & goto PATH_ERROR
+if "%BACKEND_LOCAL_SOURCE%"=="" set "FAILED_PATH=BACKEND LOCALHOST SOURCE" & set "PATH_VAL=[EMPTY]" & goto PATH_ERROR
+if "%BACKEND_LOCAL_DEST%"=="" set "FAILED_PATH=BACKEND LOCALHOST DESTINATION" & set "PATH_VAL=[EMPTY]" & goto PATH_ERROR
+
+call :CHECK_SWAP "%PROD_SOURCE%" || goto SWAP_ERROR
+call :CHECK_SWAP "%LOCAL_SOURCE%" || goto SWAP_ERROR
+call :CHECK_SWAP "%BACKEND_PROD_SOURCE%" || goto SWAP_ERROR
+call :CHECK_SWAP "%BACKEND_LOCAL_SOURCE%" || goto SWAP_ERROR
 
 if not exist "%PROD_SOURCE%" set "FAILED_PATH=FRONTEND PRODUCTION SOURCE" & set "PATH_VAL=%PROD_SOURCE%" & goto PATH_ERROR
 if not exist "%PROD_DEST%" set "FAILED_PATH=FRONTEND PRODUCTION DESTINATION" & set "PATH_VAL=%PROD_DEST%" & goto PATH_ERROR
@@ -443,8 +477,13 @@ if not exist "%BACKEND_LOCAL_DEST%" set "FAILED_PATH=BACKEND LOCALHOST DESTINATI
 goto CHECK_ROUTE_DECISION
 
 :VERIFY_FULLSTACK_4PATH
-echo "%PROD_SOURCE%" | findstr /I "G: My-Drive OneDrive Dropbox iCloud CloudSync" >nul && goto SWAP_ERROR
-echo "%LOCAL_SOURCE%" | findstr /I "G: My-Drive OneDrive Dropbox iCloud CloudSync" >nul && goto SWAP_ERROR
+if "%PROD_SOURCE%"=="" set "FAILED_PATH=FULL-STACK PRODUCTION SOURCE" & set "PATH_VAL=[EMPTY]" & goto PATH_ERROR
+if "%PROD_DEST%"=="" set "FAILED_PATH=FULL-STACK PRODUCTION DESTINATION" & set "PATH_VAL=[EMPTY]" & goto PATH_ERROR
+if "%LOCAL_SOURCE%"=="" set "FAILED_PATH=FULL-STACK LOCALHOST SOURCE" & set "PATH_VAL=[EMPTY]" & goto PATH_ERROR
+if "%LOCAL_DEST%"=="" set "FAILED_PATH=FULL-STACK LOCALHOST DESTINATION" & set "PATH_VAL=[EMPTY]" & goto PATH_ERROR
+
+call :CHECK_SWAP "%PROD_SOURCE%" || goto SWAP_ERROR
+call :CHECK_SWAP "%LOCAL_SOURCE%" || goto SWAP_ERROR
 
 if not exist "%PROD_SOURCE%" set "FAILED_PATH=FULL-STACK PRODUCTION SOURCE" & set "PATH_VAL=%PROD_SOURCE%" & goto PATH_ERROR
 if not exist "%PROD_DEST%" set "FAILED_PATH=FULL-STACK PRODUCTION DESTINATION" & set "PATH_VAL=%PROD_DEST%" & goto PATH_ERROR
@@ -453,7 +492,10 @@ if not exist "%LOCAL_DEST%" set "FAILED_PATH=FULL-STACK LOCALHOST DESTINATION" &
 goto CHECK_ROUTE_DECISION
 
 :VERIFY_SINGLE
-echo "%SINGLE_SOURCE%" | findstr /I "G: My-Drive OneDrive Dropbox iCloud CloudSync" >nul && goto SWAP_ERROR
+if "%SINGLE_SOURCE%"=="" set "FAILED_PATH=SINGLE TARGET SOURCE" & set "PATH_VAL=[EMPTY]" & goto PATH_ERROR
+if "%SINGLE_DEST%"=="" set "FAILED_PATH=SINGLE TARGET DESTINATION" & set "PATH_VAL=[EMPTY]" & goto PATH_ERROR
+
+call :CHECK_SWAP "%SINGLE_SOURCE%" || goto SWAP_ERROR
 
 if not exist "%SINGLE_SOURCE%" set "FAILED_PATH=SINGLE TARGET SOURCE" & set "PATH_VAL=%SINGLE_SOURCE%" & goto PATH_ERROR
 if not exist "%SINGLE_DEST%" set "FAILED_PATH=SINGLE TARGET DESTINATION" & set "PATH_VAL=%SINGLE_DEST%" & goto PATH_ERROR
@@ -692,6 +734,25 @@ echo ============================================================
 pause
 goto MENU
 
+:CHECK_SWAP
+echo %1 | findstr /I /C:"My-Drive" /C:"OneDrive" /C:"Dropbox" /C:"iCloud" /C:"CloudSync" >nul
+if errorlevel 1 exit /b 0
+exit /b 1
+
+:CLEAN_PATH
+if not defined %~1 exit /b 0
+call set "tmp_val=%%%~1%%"
+set "tmp_val=%tmp_val:"=%"
+:clean_loop
+if not defined tmp_val (
+    set "%~1="
+    exit /b 0
+)
+if "%tmp_val:~-1%"==" " set "tmp_val=%tmp_val:~0,-1%" & goto clean_loop
+if "%tmp_val:~-1%"=="\" set "tmp_val=%tmp_val:~0,-1%" & goto clean_loop
+set "%~1=%tmp_val%"
+exit /b 0
+
 :PATH_ERROR
 color 0C
 echo.
@@ -699,7 +760,7 @@ echo ❌ CRITICAL CONFIGURATION ERROR ❌
 echo ------------------------------------------------------------
 echo THE FOLLOWING PATH DOES NOT MATCH OR DOES NOT EXIST:
 echo Target: %FAILED_PATH%
-echo Path:   %PATH_VAL%
+echo Path:   "%PATH_VAL%"
 echo ------------------------------------------------------------
 echo.
 echo [!] OPERATION ABORTED. No files were read, copied, or modified.
