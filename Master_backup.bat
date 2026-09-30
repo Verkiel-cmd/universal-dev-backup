@@ -270,8 +270,8 @@ echo   [2] Frontend Architecture Only  (4 Folders - FE Local + FE Prod)
 echo   [3] Backend Architecture Only   (4 Folders - BE Local + BE Prod)
 echo   [4] All Localhost Environments  (4 Folders - FE Local + BE Local)
 echo   [5] All Production Environments (4 Folders - FE Prod + BE Prod)
-echo   [6] Full-Stack Combo Ecosystem  (8 Folders - All Profiles)
-echo   [7] Full-Stack Unified (4 Folders - Local FS + Prod FS)
+echo   [6] Full-Stack Unified (4 Folders - Local FS + Prod FS)
+echo   [7] Full-Stack Combo Ecosystem  (8 Folders - All Profiles)
 echo ============================================================
 echo.
 set /p sync_scope="Enter choice (1, 2, 3, 4, 5, 6, or 7): "
@@ -281,8 +281,8 @@ if "%sync_scope%"=="2" set "SYNC_MODE=FRONTEND_ONLY" & goto CUSTOM_INPUT
 if "%sync_scope%"=="3" set "SYNC_MODE=BACKEND_ONLY" & goto CUSTOM_INPUT
 if "%sync_scope%"=="4" set "SYNC_MODE=LOCALHOST_ONLY" & goto CUSTOM_INPUT
 if "%sync_scope%"=="5" set "SYNC_MODE=PROD_ONLY" & goto CUSTOM_INPUT
-if "%sync_scope%"=="6" set "SYNC_MODE=FULL_STACK" & goto CUSTOM_INPUT
-if "%sync_scope%"=="7" set "SYNC_MODE=FULLSTACK_4PATH" & goto CUSTOM_INPUT
+if "%sync_scope%"=="6" set "SYNC_MODE=FULLSTACK_4PATH" & goto CUSTOM_INPUT
+if "%sync_scope%"=="7" set "SYNC_MODE=FULL_STACK" & goto CUSTOM_INPUT
 goto CUSTOM_WIZARD
 
 :CUSTOM_INPUT
